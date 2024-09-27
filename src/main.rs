@@ -10,19 +10,18 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let input_size: usize = args[1].parse().unwrap();
+    let num_processors: usize = args[2].parse().unwrap(); 
 
     let mut input: Vec<i64> = gen_input(input_size);
     let mut scratch: Vec<i64> = input.clone();
-
-    println!("Unsorted: {:?}", input);
     
     let now = Instant::now();
-    
-    par_merge_sort(&mut input, &mut scratch);
-    
+    println!("Input {:?}", input);
+    par_merge_sort(&mut input, &mut scratch, num_processors);
+    println!("Sorted {:?}", input);  
     let elapsed = now.elapsed();
     println!("Time: {:.3?}", elapsed);
-    println!("Sorted input: {:?}", is_sorted(input));
+    println!("correct: {:?}", is_sorted(scratch));
 }
 
 
