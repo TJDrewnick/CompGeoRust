@@ -14,14 +14,11 @@ fn main() {
 
     let mut input: Vec<i64> = gen_input(input_size);
     let mut scratch: Vec<i64> = input.clone();
-
-    println!("Input {:?}", input);
     
     let now = Instant::now();
     par_merge_sort(&mut input, &mut scratch, num_processors);
     let elapsed = now.elapsed();
     
-    println!("Sorted {:?}", input);
     println!("Time: {:.3?}", elapsed);
     println!("correct: {:?}", is_sorted(scratch));
 }
