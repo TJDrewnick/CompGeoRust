@@ -1,3 +1,7 @@
+
+/**
+* TASK 1
+*/
 fn merge(left: &[i64], right: &[i64], output: &mut [i64]) {
     let (mut i, mut j, mut k) = (0, 0, 0);
 
@@ -17,7 +21,7 @@ fn merge(left: &[i64], right: &[i64], output: &mut [i64]) {
         k = k + 1;
         i = i + 1;
     }
-    
+
     while j < right.len() {
         output[k] = right[j];
         k = k + 1;
@@ -65,4 +69,19 @@ pub fn par_merge_sort<'input>(input: &'input mut [i64], scratch: &'input mut [i6
         merge(left_scratch, right_scratch, input);
         scratch.copy_from_slice(input);
     }
+}
+
+
+/**
+* TASK 2
+*/
+pub fn seg_merge_with_seq(left: &[i64], right: &[i64], output: &mut [i64], num_processors: usize) {
+
+    // split right into size log(num_processors) pieces
+    
+    
+    // binary search for upper bound of each piece - if looking at right[i] place in output array on spot i + rank(right[i], left)
+    
+    
+
 }
