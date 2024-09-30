@@ -4,7 +4,7 @@ mod merge_sort;
 use std::env;
 use std::time::Instant;
 use input_generation::gen_input;
-use crate::merge_sort::{par_merge_sort, seg_merge_with_seq};
+use crate::merge_sort::{par_merge_sort, par_merge};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -80,7 +80,7 @@ mod tests {
         let right: Vec<i64> = vec![5, 6, 7, 8];
         let solution = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let mut output = solution.clone();
-        seg_merge_with_seq(&left, &right, &mut output, 8);
+        par_merge(&left, &right, &mut output, 8);
         assert_eq!(is_equal_vec(output, solution), true);
     }
 }

@@ -75,13 +75,32 @@ pub fn par_merge_sort<'input>(input: &'input mut [i64], scratch: &'input mut [i6
 /**
 * TASK 2
 */
-pub fn seg_merge_with_seq(left: &[i64], right: &[i64], output: &mut [i64], num_processors: usize) {
-
-    // split right into size log(num_processors) pieces
+pub fn par_merge(left: &[i64], right: &[i64], output: &mut [i64], num_processors: usize) {
     
+    // allocate array R[0,...,p] and R[0] = 0
+    let mut rank_vector = vec![0i64; num_processors];
+    let rank_chunks = rank_vector.chunks_mut(1);
     
     // binary search for upper bound of each piece - if looking at right[i] place in output array on spot i + rank(right[i], left)
+    // get rank
+    std::thread::scope(|scope| {
+        for rank in rank_chunks {
+                scope.spawn(|| {
+                rank[0] = 1;/*TODO get rank: left, right[(i*n)/num_processors]*/
+            });
+        }
+        /*TODO get rank: left, right[(i*n)/num_processors]*/
+    });
     
+    // merge each chunk in sequentially ()
+    std::thread::scope(|scope| {
+        for i in 1..num_processors {
+            scope.spawn(|| {
+                /* TODO indices: merge(left, right, output)*/
+            });
+        }
+        /* TODO indices: merge(left, right, output)*/
+    });
     
 
 }
