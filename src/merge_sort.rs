@@ -1,8 +1,9 @@
+use std::iter::zip;
 
 /**
 * TASK 1
 */
-fn merge(left: &[i64], right: &[i64], output: &mut [i64]) {
+fn sequential_merge(left: &[i64], right: &[i64], output: &mut [i64]) {
     let (mut i, mut j, mut k) = (0, 0, 0);
 
     while i < left.len() && j < right.len() {
@@ -42,7 +43,7 @@ pub fn sequential_merge_sort(input: &mut [i64], scratch: &mut [i64]) {
     sequential_merge_sort(left_input, left_scratch);
     sequential_merge_sort(right_input, right_scratch);
 
-    merge(left_scratch, right_scratch, input);
+    sequential_merge(left_scratch, right_scratch, input);
     scratch.copy_from_slice(input);
 }
 
@@ -66,7 +67,7 @@ pub fn par_merge_sort<'input>(input: &'input mut [i64], scratch: &'input mut [i6
         });
 
         // merge in sequence
-        merge(left_scratch, right_scratch, input);
+        sequential_merge(left_scratch, right_scratch, input);
         scratch.copy_from_slice(input);
     }
 }
@@ -75,32 +76,66 @@ pub fn par_merge_sort<'input>(input: &'input mut [i64], scratch: &'input mut [i6
 /**
 * TASK 2
 */
-pub fn par_merge(left: &[i64], right: &[i64], output: &mut [i64], num_processors: usize) {
-    
+pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processors: usize) {
+
     // allocate array R[0,...,p] and R[0] = 0
-    let mut rank_vector = vec![0i64; num_processors];
+    let mut rank_vector = vec![0usize; num_processors + 1];
     let rank_chunks = rank_vector.chunks_mut(1);
-    
+
     // binary search for upper bound of each piece - if looking at right[i] place in output array on spot i + rank(right[i], left)
     // get rank
+    let n = right.len();
+    let chunk_size = (n as f64 / (num_processors as f64)).ceil() as usize;
+
     std::thread::scope(|scope| {
-        for rank in rank_chunks {
-                scope.spawn(|| {
-                rank[0] = 1;/*TODO get rank: left, right[(i*n)/num_processors]*/
-            });
+        for (i, rank) in zip(0..num_processors + 1, rank_chunks) {
+            if i == 0 {
+                // R[0] = 0
+                continue
+            } else if i == num_processors - 1 {
+                rank[0] = binary_search(left, right[(i-1) * chunk_size]);
+            } else {
+                scope.spawn(move || {
+                    rank[0] = binary_search(left, right[(i-1) * chunk_size]);
+                });
+            }
         }
-        /*TODO get rank: left, right[(i*n)/num_processors]*/
     });
-    
+
+    let right_chunks = right.chunks(chunk_size);
     // merge each chunk in sequentially ()
     std::thread::scope(|scope| {
-        for i in 1..num_processors {
-            scope.spawn(|| {
-                /* TODO indices: merge(left, right, output)*/
-            });
+        for (i, right_chunk) in zip(0..num_processors, right_chunks) {
+            if i == num_processors - 1 {
+                let left_slice = &left[rank_vector[i]..];
+                let output_slice = &output[ + ];
+                sequential_merge(left_slice, right_chunk, output_slice)
+            } else {
+                let left_slice = &left[rank_vector[i]..rank_vector[i+1]];
+                let output_slice = &output[i * chunk_size + rank_vector[i]..  (i+1) * chunk_size + rank_vector[i+1]];
+                scope.spawn(|| {
+                    sequential_merge(left_slice, right_chunk, output_slice)
+                });
+            }
         }
-        /* TODO indices: merge(left, right, output)*/
     });
     
+    
+    // TODO: if any elements remain in left, that are larger than all elements in right, put them in output
+    
+}
 
+
+pub fn binary_search(input: &[i64], key: i64) -> usize {
+    let (mut low, mut high) = (0, input.len() - 1);
+
+    while low < high {
+        let mid = (low + high) / 2;
+        if key <= input[mid] {
+            high = mid
+        } else {
+            low = mid + 1
+        }
+    }
+    high
 }
