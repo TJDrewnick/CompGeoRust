@@ -51,7 +51,7 @@ mod tests {
     use crate::merge_sort::sequential_merge;
     use super::*;
 
-    const NUM_PROCESSORS_TEST: usize = 2;
+    const NUM_PROCESSORS_TEST: usize = 4;
 
     // Test sequential merge
     #[test]

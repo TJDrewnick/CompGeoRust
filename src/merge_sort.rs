@@ -81,21 +81,20 @@ pub fn par_merge_sort<'input>(input: &'input mut [i64], scratch: &'input mut [i6
 * TASK 2
 */
 pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processors: usize) {
+    let n = right.len();
+
+    // if there are fewer elements in right array than the number of processors available, use only right.len() processors
+    let threads = min(num_processors, n);
 
     // allocate array R[0,...,p] and R[0] = 0
-    let mut rank_vector = vec![0usize; num_processors + 1];
+    let mut rank_vector = vec![0usize; threads + 1];
     let rank_chunks = rank_vector.chunks_mut(1);
+    let chunk_size = (n as f64 / (threads as f64)).ceil() as usize;
 
     // binary search for upper bound of each piece - if looking at right[i] place in output array on spot i + rank(right[i], left)
     // get rank
-    let n = right.len();
-    let chunk_size = (n as f64 / (num_processors as f64)).ceil() as usize;
-
-    // if there are fewer elements in right array than the number of processors available, use only right.len() processors
-    let threads = min(num_processors, right.len());
-
     std::thread::scope(|scope| {
-        for (i, rank) in zip(0..threads, rank_chunks) {
+        for (i, rank) in zip(0..threads + 1, rank_chunks) {
             
                 println!("loop 1");
                 if i == 0 {
@@ -112,7 +111,7 @@ pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processor
     });
 
     // if any elements remain in left, that are larger than all elements in right, put them in output
-    let last_rank = rank_vector[threads];
+    let last_rank = rank_vector[rank_vector.len() - 1];
     if last_rank < left.len() {
         let len = (&output).len();
         output[len - left.len()..].copy_from_slice(&left[last_rank..]);
