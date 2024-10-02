@@ -45,7 +45,6 @@ pub fn parallel_merge(left: &[i64], right: &[i64], output: &mut [i64], num_proce
     // get rank
     std::thread::scope(|scope| {
         for (i, rank) in zip(0..threads + 1, rank_chunks) {
-            println!("loop 1");
             if i == 0 {
                 // R[0] = 0
                 continue;
@@ -76,10 +75,8 @@ pub fn parallel_merge(left: &[i64], right: &[i64], output: &mut [i64], num_proce
         for (i, right_chunk) in zip(0..threads, right_chunks) {
             // split remaining chunk of the output into chunk corresponding to the elements of left
             // and right to me merged now (using this approach so rust knows that the slices of output do not overlap)
-            println!("hi I am a loop");
 
             if i == threads - 1 {
-                println!("sup");
                 let left_slice = &left[rank_vector[i]..];
                 sequential_merge(left_slice, right_chunk, rest);
             } else {
@@ -89,9 +86,6 @@ pub fn parallel_merge(left: &[i64], right: &[i64], output: &mut [i64], num_proce
                 // let output_slice = &mut full_chunks[i * chunk_size + rank_vector[i]..  (i+1) * chunk_size + rank_vector[i+1]];
                 scope.spawn(move || {
                     sequential_merge(left_slice, right_chunk, current_chunk);
-                    println!("Printing current chunk");
-                    println!("{:?}", left_slice);
-                    println!("{:?}", right_chunk);
                 });
             }
         }
@@ -102,8 +96,7 @@ pub fn parallel_merge(left: &[i64], right: &[i64], output: &mut [i64], num_proce
 mod tests {
     use crate::merge::{parallel_merge, sequential_merge};
     use crate::utils::is_equal_vec;
-
-    const NUM_PROCESSORS_TEST: usize = 8;
+    use crate::NUM_PROCESSORS_TEST;
 
     // Test sequential merge
     #[test]
@@ -143,7 +136,6 @@ mod tests {
         let solution: Vec<i64> = (0..1000).collect();
         let mut output: Vec<i64> = vec![0i64; 1000];
         sequential_merge(&left, &right, &mut output);
-        eprintln!("{:?}", output);
         assert_eq!(is_equal_vec(output, solution), true);
     }
 
@@ -175,7 +167,6 @@ mod tests {
         let solution: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let mut output: Vec<i64> = vec![0i64; 8];
         parallel_merge(&left, &right, &mut output, NUM_PROCESSORS_TEST);
-        eprintln!("{:?}", output);
         assert_eq!(is_equal_vec(output, solution), true);
     }
 
@@ -186,7 +177,6 @@ mod tests {
         let solution: Vec<i64> = (0..1000).collect();
         let mut output: Vec<i64> = vec![0i64; 1000];
         parallel_merge(&left, &right, &mut output, NUM_PROCESSORS_TEST);
-        eprintln!("{:?}", output);
         assert_eq!(is_equal_vec(output, solution), true);
     }
 }

@@ -9,6 +9,8 @@ use input_generation::gen_input;
 use std::env;
 use std::time::Instant;
 
+pub const NUM_PROCESSORS_TEST: usize = 8;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 

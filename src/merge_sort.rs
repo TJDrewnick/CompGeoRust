@@ -83,8 +83,7 @@ pub fn fully_parallel_merge_sort<'input>(
 mod tests {
     use crate::merge_sort::{fully_parallel_merge_sort, parallel_merge_sort};
     use crate::utils::is_sorted;
-
-    const NUM_PROCESSORS_TEST: usize = 8;
+    use crate::NUM_PROCESSORS_TEST;
 
     // Test parallel merge sort (using sequential merge)
     #[test]
