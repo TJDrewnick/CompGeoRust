@@ -48,7 +48,7 @@ fn is_equal_vec(vec1: Vec<i64>, vec2: Vec<i64>) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::merge_sort::{binary_search, sequential_merge};
+    use crate::merge_sort::{binary_search, fully_parallel_merge_sort, sequential_merge};
     use super::*;
 
     const NUM_PROCESSORS_TEST: usize = 8;
@@ -113,8 +113,6 @@ mod tests {
         assert_eq!(is_sorted(scratch), true);
     }
 
-
-    // Test parallel merge
     #[test]
     fn sort_parallel_random() {
         let mut input: Vec<i64> = vec![5, 7, 2, 9, 1, 3, 8, 4, 6];
@@ -122,7 +120,10 @@ mod tests {
         par_merge_sort(&mut input, &mut scratch, NUM_PROCESSORS_TEST);
         assert_eq!(is_sorted(scratch), true);
     }
-
+    
+    
+    // Test parallel merge
+    
     #[test]
     fn merge_parallel_left_smaller() {
         let left: Vec<i64> = vec![1, 2, 3, 4];
@@ -164,6 +165,32 @@ mod tests {
         eprintln!("{:?}", output);
         assert_eq!(is_equal_vec(output, solution), true);
     }
+
+    // Test parallel merge sort (using parallel merge)
+    #[test]
+    fn parallel_sort_parallel_merge_sorted() {
+        let mut input: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let mut scratch: Vec<i64> = vec![0i64; 9];
+        fully_parallel_merge_sort(&mut input, &mut scratch, NUM_PROCESSORS_TEST);
+        assert_eq!(is_sorted(scratch), true);
+    }
+
+    #[test]
+    fn parallel_sort_parallel_merge_reversed() {
+        let mut input: Vec<i64> = vec![9, 8, 7, 6, 5, 4, 3, 2, 1];
+        let mut scratch: Vec<i64> = vec![0i64; 9];
+        fully_parallel_merge_sort(&mut input, &mut scratch, NUM_PROCESSORS_TEST);
+        assert_eq!(is_sorted(scratch), true);
+        
+    }
+
+    #[test]
+    fn parallel_sort_parallel_random() {
+        let mut input: Vec<i64> = vec![5, 7, 2, 9, 1, 3, 8, 4, 6];
+        let mut scratch: Vec<i64> = vec![0i64; 9];
+        fully_parallel_merge_sort(&mut input, &mut scratch, NUM_PROCESSORS_TEST);
+        assert_eq!(is_sorted(scratch), true);
+    }    
 
     // 0 even
     // 1-249 uneven

@@ -1,9 +1,7 @@
 use std::cmp::min;
 use std::iter::zip;
 
-/**
-* TASK 1
-*/
+/** TASK 1 */
 pub fn sequential_merge(left: &[i64], right: &[i64], output: &mut [i64]) {
     let (mut i, mut j, mut k) = (0, 0, 0);
 
@@ -77,9 +75,7 @@ pub fn par_merge_sort<'input>(input: &'input mut [i64], scratch: &'input mut [i6
 }
 
 
-/**
-* TASK 2
-*/
+/** TASK 2 */
 pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processors: usize) {
     let n = right.len();
 
@@ -130,8 +126,8 @@ pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processor
             // split remaining chunk of the output into chunk corresponding to the elements of left
             // and right to me merged now (using this approach so rust knows that the slices of output do not overlap)
             println!("hi I am a loop");
-            
-            if i == threads - 1 
+
+            if i == threads - 1
             {   
                 println!("sup");
                 let left_slice = &left[rank_vector[i]..];
@@ -164,4 +160,31 @@ pub fn binary_search(input: &[i64], key: i64) -> usize {
         }
     }
     high
+}
+
+/** TASK 3 */
+pub fn fully_parallel_merge_sort<'input>(input: &'input mut [i64], scratch: &'input mut [i64], num_processors: usize) {
+    let len = input.len();
+    if len == 1 {
+        return;
+    }
+    if num_processors < 2 {
+        sequential_merge_sort(input, scratch);
+    } else {
+        let mid = len / 2;
+        let left_processors = num_processors / 2;
+
+        let (left_input, right_input) = input.split_at_mut(mid);
+        let (left_scratch, right_scratch) = scratch.split_at_mut(mid);
+
+        std::thread::scope(|scope| {
+            scope.spawn(|| par_merge_sort(left_input, left_scratch, left_processors));
+            par_merge_sort(right_input, right_scratch, num_processors - left_processors);
+        });
+        
+        // merge in parallel
+        par_merge(left_scratch, right_scratch, input, num_processors);
+
+        scratch.copy_from_slice(input);
+    }
 }
