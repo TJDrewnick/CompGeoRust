@@ -1,9 +1,10 @@
+use std::cmp::min;
 use std::iter::zip;
 
 /**
 * TASK 1
 */
-fn sequential_merge(left: &[i64], right: &[i64], output: &mut [i64]) {
+pub fn sequential_merge(left: &[i64], right: &[i64], output: &mut [i64]) {
     let (mut i, mut j, mut k) = (0, 0, 0);
 
     while i < left.len() && j < right.len() {
@@ -68,6 +69,9 @@ pub fn par_merge_sort<'input>(input: &'input mut [i64], scratch: &'input mut [i6
 
         // merge in sequence
         sequential_merge(left_scratch, right_scratch, input);
+        // merge in parallel
+        //par_merge(left_scratch, right_scratch, input, num_processors);
+
         scratch.copy_from_slice(input);
     }
 }
@@ -87,42 +91,63 @@ pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processor
     let n = right.len();
     let chunk_size = (n as f64 / (num_processors as f64)).ceil() as usize;
 
+    // if there are fewer elements in right array than the number of processors available, use only right.len() processors
+    let threads = min(num_processors, right.len());
+
     std::thread::scope(|scope| {
-        for (i, rank) in zip(0..num_processors + 1, rank_chunks) {
-            if i == 0 {
-                // R[0] = 0
-                continue
-            } else if i == num_processors - 1 {
-                rank[0] = binary_search(left, right[(i-1) * chunk_size]);
-            } else {
-                scope.spawn(move || {
+        for (i, rank) in zip(0..threads, rank_chunks) {
+            
+                println!("loop 1");
+                if i == 0 {
+                    // R[0] = 0
+                    continue
+                } else if i == threads - 1 {
                     rank[0] = binary_search(left, right[(i-1) * chunk_size]);
-                });
-            }
+                } else {
+                    scope.spawn(move || {
+                        rank[0] = binary_search(left, right[(i-1) * chunk_size]);
+                    });
+                }
         }
     });
+
+    // if any elements remain in left, that are larger than all elements in right, put them in output
+    let last_rank = rank_vector[threads];
+    if last_rank < left.len() {
+        let len = (&output).len();
+        output[len - left.len()..].copy_from_slice(&left[last_rank..]);
+    }
 
     let right_chunks = right.chunks(chunk_size);
     // merge each chunk in sequentially ()
     std::thread::scope(|scope| {
-        for (i, right_chunk) in zip(0..num_processors, right_chunks) {
-            if i == num_processors - 1 {
+
+        let mut current_chunk;
+        let mut rest= output;
+
+        for (i, right_chunk) in zip(0..threads, right_chunks) {
+
+            // split remaining chunk of the output into chunk corresponding to the elements of left
+            // and right to me merged now (using this approach so rust knows that the slices of output do not overlap)
+            println!("hi I am a loop");
+            (current_chunk, rest) = rest.split_at_mut(chunk_size + rank_vector[i+1] - rank_vector[i]);
+
+
+
+            if i == threads 
+            {   
+                println!("sup");
                 let left_slice = &left[rank_vector[i]..];
-                let output_slice = &output[ + ];
-                sequential_merge(left_slice, right_chunk, output_slice)
+                sequential_merge(left_slice, right_chunk, rest);
             } else {
                 let left_slice = &left[rank_vector[i]..rank_vector[i+1]];
-                let output_slice = &output[i * chunk_size + rank_vector[i]..  (i+1) * chunk_size + rank_vector[i+1]];
+                // let output_slice = &mut full_chunks[i * chunk_size + rank_vector[i]..  (i+1) * chunk_size + rank_vector[i+1]];
                 scope.spawn(|| {
-                    sequential_merge(left_slice, right_chunk, output_slice)
+                    sequential_merge(left_slice, right_chunk, current_chunk);
                 });
             }
         }
     });
-    
-    
-    // TODO: if any elements remain in left, that are larger than all elements in right, put them in output
-    
 }
 
 
