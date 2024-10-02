@@ -48,10 +48,10 @@ fn is_equal_vec(vec1: Vec<i64>, vec2: Vec<i64>) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::merge_sort::sequential_merge;
+    use crate::merge_sort::{binary_search, sequential_merge};
     use super::*;
 
-    const NUM_PROCESSORS_TEST: usize = 4;
+    const NUM_PROCESSORS_TEST: usize = 8;
 
     // Test sequential merge
     #[test]
@@ -163,5 +163,59 @@ mod tests {
         par_merge(&left, &right, &mut output, NUM_PROCESSORS_TEST);
         eprintln!("{:?}", output);
         assert_eq!(is_equal_vec(output, solution), true);
+    }
+
+    // 0 even
+    // 1-249 uneven
+    // 2-250 even
+    // 251-499 uneven
+    // 252-500 even
+    // 501-749 uneven
+    // 502-750 even
+    // 751-999 uneven
+    // 752-998 even
+
+    
+    // Test binary search
+    #[test]
+    fn binary_search_element_missing() {
+        let input: Vec<i64> = vec![1, 2, 3, 5, 6, 7, 8, 9];
+        let index = binary_search(&*input, 4);
+        assert_eq!(Err(index), input.binary_search(&4));
+    }
+
+    #[test]
+    fn binary_search_middle() {
+        let input: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let index = binary_search(&*input, 4);
+        assert_eq!(Ok(index), input.binary_search(&4));
+    }
+
+    #[test]
+    fn binary_search_right_edge() {
+        let input: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let index = binary_search(&*input, 9);
+        assert_eq!(Ok(index), input.binary_search(&9));
+    }
+
+    #[test]
+    fn binary_search_right_edge_missing() {
+        let input: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8];
+        let index = binary_search(&*input, 9);
+        assert_eq!(Err(index), input.binary_search(&9));
+    }
+
+    #[test]
+    fn binary_search_left_edge() {
+        let input: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let index = binary_search(&*input, 1);
+        assert_eq!(Ok(index), input.binary_search(&1));
+    }
+
+    #[test]
+    fn binary_search_left_edge_missing() {
+        let input: Vec<i64> = vec![2, 3, 4, 5, 6, 7, 8, 9];
+        let index = binary_search(&*input, 1);
+        assert_eq!(Err(index), input.binary_search(&1));
     }
 }

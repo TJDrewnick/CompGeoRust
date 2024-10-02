@@ -100,11 +100,12 @@ pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processor
                 if i == 0 {
                     // R[0] = 0
                     continue
-                } else if i == threads - 1 {
-                    rank[0] = binary_search(left, right[(i-1) * chunk_size]);
+                } else if i == threads {
+                    // find rank of last element in right - this is the last upper bound
+                    rank[0] = binary_search(left, right[n-1]);
                 } else {
                     scope.spawn(move || {
-                        rank[0] = binary_search(left, right[(i-1) * chunk_size]);
+                        rank[0] = binary_search(left, right[i * chunk_size]);
                     });
                 }
         }
@@ -113,8 +114,8 @@ pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processor
     // if any elements remain in left, that are larger than all elements in right, put them in output
     let last_rank = rank_vector[rank_vector.len() - 1];
     if last_rank < left.len() {
-        let len = (&output).len();
-        output[len - left.len()..].copy_from_slice(&left[last_rank..]);
+        let output_len = (&output).len();
+        output[output_len - &left[last_rank..].len()..].copy_from_slice(&left[last_rank..]);
     }
 
     let right_chunks = right.chunks(chunk_size);
@@ -129,20 +130,21 @@ pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processor
             // split remaining chunk of the output into chunk corresponding to the elements of left
             // and right to me merged now (using this approach so rust knows that the slices of output do not overlap)
             println!("hi I am a loop");
-            (current_chunk, rest) = rest.split_at_mut(chunk_size + rank_vector[i+1] - rank_vector[i]);
-
-
-
-            if i == threads 
+            
+            if i == threads - 1 
             {   
                 println!("sup");
                 let left_slice = &left[rank_vector[i]..];
                 sequential_merge(left_slice, right_chunk, rest);
             } else {
+                (current_chunk, rest) = rest.split_at_mut(chunk_size + rank_vector[i+1] - rank_vector[i]);
                 let left_slice = &left[rank_vector[i]..rank_vector[i+1]];
                 // let output_slice = &mut full_chunks[i * chunk_size + rank_vector[i]..  (i+1) * chunk_size + rank_vector[i+1]];
-                scope.spawn(|| {
+                scope.spawn(move || {
                     sequential_merge(left_slice, right_chunk, current_chunk);
+                    println!("Printing current chunk");
+                    println!("{:?}", left_slice);
+                    println!("{:?}", right_chunk);
                 });
             }
         }
@@ -151,7 +153,7 @@ pub fn par_merge(left: &[i64], right: & [i64], output: &mut [i64], num_processor
 
 
 pub fn binary_search(input: &[i64], key: i64) -> usize {
-    let (mut low, mut high) = (0, input.len() - 1);
+    let (mut low, mut high) = (0, input.len());
 
     while low < high {
         let mid = (low + high) / 2;
