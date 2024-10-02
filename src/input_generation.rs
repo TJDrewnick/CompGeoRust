@@ -1,11 +1,12 @@
-use turborand::prelude::*;
 use std::iter::repeat_with;
+use turborand::prelude::*;
 
-pub fn gen_input(input_size: usize) -> Vec<i64>{
-    
+pub fn gen_input(input_size: usize) -> Vec<i64> {
     let rand = Rng::new();
 
-    repeat_with(|| rand.i64(-(input_size as i64)..(input_size as i64))).take(input_size).collect()
+    repeat_with(|| rand.i64(-(input_size as i64)..(input_size as i64)))
+        .take(input_size)
+        .collect()
 }
 
 // TODO new cases like: sorted
