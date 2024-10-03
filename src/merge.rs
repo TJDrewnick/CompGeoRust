@@ -95,7 +95,6 @@ pub fn parallel_merge(left: &[i64], right: &[i64], output: &mut [i64], num_proce
 #[cfg(test)]
 mod tests {
     use crate::merge::{parallel_merge, sequential_merge};
-    use crate::utils::is_equal_vec;
     use crate::NUM_PROCESSORS_TEST;
 
     // Test sequential merge
@@ -106,7 +105,7 @@ mod tests {
         let solution: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let mut output: Vec<i64> = vec![0i64; 8];
         sequential_merge(&left, &right, &mut output);
-        assert_eq!(is_equal_vec(output, solution), true);
+        assert_eq!(output, solution);
     }
 
     #[test]
@@ -116,7 +115,7 @@ mod tests {
         let solution: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let mut output: Vec<i64> = vec![0i64; 8];
         sequential_merge(&left, &right, &mut output);
-        assert_eq!(is_equal_vec(output, solution), true);
+        assert_eq!(output, solution);
     }
 
     #[test]
@@ -126,7 +125,7 @@ mod tests {
         let solution: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let mut output: Vec<i64> = vec![0i64; 8];
         sequential_merge(&left, &right, &mut output);
-        assert_eq!(is_equal_vec(output, solution), true);
+        assert_eq!(output, solution);
     }
 
     #[test]
@@ -136,7 +135,7 @@ mod tests {
         let solution: Vec<i64> = (0..1000).collect();
         let mut output: Vec<i64> = vec![0i64; 1000];
         sequential_merge(&left, &right, &mut output);
-        assert_eq!(is_equal_vec(output, solution), true);
+        assert_eq!(output, solution);
     }
 
     // Test parallel merge
@@ -147,7 +146,7 @@ mod tests {
         let solution: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let mut output: Vec<i64> = vec![0i64; 8];
         parallel_merge(&left, &right, &mut output, NUM_PROCESSORS_TEST);
-        assert_eq!(is_equal_vec(output, solution), true);
+        assert_eq!(output, solution);
     }
 
     #[test]
@@ -157,7 +156,7 @@ mod tests {
         let solution: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let mut output: Vec<i64> = vec![0i64; 8];
         parallel_merge(&left, &right, &mut output, NUM_PROCESSORS_TEST);
-        assert_eq!(is_equal_vec(output, solution), true);
+        assert_eq!(output, solution);
     }
 
     #[test]
@@ -167,7 +166,7 @@ mod tests {
         let solution: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let mut output: Vec<i64> = vec![0i64; 8];
         parallel_merge(&left, &right, &mut output, NUM_PROCESSORS_TEST);
-        assert_eq!(is_equal_vec(output, solution), true);
+        assert_eq!(output, solution);
     }
 
     #[test]
@@ -177,6 +176,6 @@ mod tests {
         let solution: Vec<i64> = (0..1000).collect();
         let mut output: Vec<i64> = vec![0i64; 1000];
         parallel_merge(&left, &right, &mut output, NUM_PROCESSORS_TEST);
-        assert_eq!(is_equal_vec(output, solution), true);
+        assert_eq!(output, solution);
     }
 }

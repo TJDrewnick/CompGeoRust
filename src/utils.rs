@@ -7,18 +7,6 @@ pub fn is_sorted(vec: Vec<i64>) -> bool {
     true
 }
 
-pub fn is_equal_vec(vec1: Vec<i64>, vec2: Vec<i64>) -> bool {
-    if vec1.len() != vec2.len() {
-        return false;
-    }
-    for i in 0..vec1.len() {
-        if vec1[i] != vec2[i] {
-            return false;
-        }
-    }
-    true
-}
-
 pub fn binary_search(input: &[i64], key: i64) -> usize {
     let (mut low, mut high) = (0, input.len());
 

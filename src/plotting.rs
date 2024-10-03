@@ -1,9 +1,10 @@
 use crate::input_generation::{
-    all_left_smaller_than_right, all_right_smaller_than_left, alternating, gen_input,
-    left_fits_between_last_two_elements_in_right, random_sorted_halves, reverse_sorted,
-    right_fits_between_two_elements_in_left, shuffled, sorted,
+    alternating, left_fits_between_last_two_elements_in_right, random_sorted_halves, shuffled,
+    sorted, MergeFunction,
 };
-use crate::merge::parallel_merge;
+#[allow(unused_imports)]
+use crate::merge::{parallel_merge, sequential_merge};
+#[allow(unused_imports)]
 use crate::merge_sort::{fully_parallel_merge_sort, parallel_merge_sort};
 use plotters::prelude::*;
 use plotters::style::full_palette::ORANGE;
@@ -31,6 +32,7 @@ pub fn create_data(input_sizes: Vec<usize>, threads: Vec<usize>) -> Vec<Vec<(usi
                             let mut input = input_vectors[j].clone();
                             let mut scratch = vec![0; *n];
                             let now = Instant::now();
+                            // switch to parallel_merge_sort if that should be used
                             fully_parallel_merge_sort(&mut input, &mut scratch, *t);
                             now.elapsed().as_secs_f64()
                         })
@@ -51,7 +53,7 @@ pub fn create_data(input_sizes: Vec<usize>, threads: Vec<usize>) -> Vec<Vec<(usi
 
 pub fn create_data_for_functions(
     input_sizes: Vec<usize>,
-    input_generation_functions: Vec<fn(i64) -> (Vec<i64>, Vec<i64>)>,
+    input_generation_functions: Vec<MergeFunction>,
 ) -> Vec<Vec<(usize, f64)>> {
     let mut data: Vec<Vec<(usize, f64)>> = Vec::with_capacity(input_generation_functions.len());
 
@@ -65,15 +67,13 @@ pub fn create_data_for_functions(
                             let (left, right) = function(*n as i64);
                             let mut output = vec![0; *n];
                             let now = Instant::now();
-                            parallel_merge(&*left, &*right, &mut *output, 8);
+                            // switch to parallel_merge if that should be evaluated
+                            sequential_merge(&left, &right, &mut output);
                             now.elapsed().as_secs_f64()
                         })
                         .sum();
                     // convert to milliseconds and normalise by number of evaluations
-                    (
-                        *n,
-                        (1000 / TOTAL_EVALUATIONS) as f64 * total_elapsed,
-                    )
+                    (*n, (1000 / TOTAL_EVALUATIONS) as f64 * total_elapsed)
                 })
                 .collect::<Vec<(usize, f64)>>(),
         )
@@ -144,7 +144,7 @@ pub fn plot_runtime_depending_on_input_generation() -> Result<(), Box<dyn std::e
     let input_sizes: Vec<usize> = (3..=7).map(|exp| 10usize.pow(exp)).collect();
 
     // each type of input generation will correspond to a line in the graph
-    let input_generation_function: Vec<fn(i64) -> (Vec<i64>, Vec<i64>)> = vec![
+    let input_generation_function: Vec<MergeFunction> = vec![
         alternating,
         sorted,
         random_sorted_halves,
@@ -164,12 +164,12 @@ pub fn plot_runtime_depending_on_input_generation() -> Result<(), Box<dyn std::e
 
     let mut chart = ChartBuilder::on(&root)
         .caption(
-            "Runtime of Parallel Merging depending on Input",
+            "Runtime of Sequential Merging depending on Input",
             ("times-new-roman", 30).into_font(),
         )
         .x_label_area_size(30)
         .y_label_area_size(55)
-        .build_cartesian_2d((800..10000000).log_scale(), (1e-1..1e2).log_scale())?;
+        .build_cartesian_2d((800..10000000).log_scale(), (1e-3..1e2).log_scale())?;
 
     chart
         .configure_mesh()
