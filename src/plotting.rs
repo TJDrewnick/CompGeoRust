@@ -94,7 +94,8 @@ pub fn plot_runtime_depending_on_threads() -> Result<(), Box<dyn std::error::Err
     let data = create_data(input_sizes.clone(), threads.clone());
 
     // plot
-    let root = BitMapBackend::new("runtime_plot.png", (640, 480)).into_drawing_area();
+    let root = BitMapBackend::new("runtime_plot_parallel_sort_parallel_merge.png", (640, 480))
+        .into_drawing_area();
     let _ = root.fill(&WHITE);
     let root = root.margin(10, 10, 10, 10);
 
@@ -158,7 +159,7 @@ pub fn plot_runtime_depending_on_input_generation() -> Result<(), Box<dyn std::e
 
     // plot
     let root =
-        BitMapBackend::new("runtime_plot_parallel_merge.png", (640, 480)).into_drawing_area();
+        BitMapBackend::new("runtime_plot_sequential_merge.png", (640, 480)).into_drawing_area();
     let _ = root.fill(&WHITE);
     let root = root.margin(10, 10, 10, 10);
 
