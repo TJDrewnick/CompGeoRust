@@ -20,6 +20,8 @@ pub fn create_data(input_sizes: Vec<usize>, threads: Vec<usize>) -> Vec<Vec<(usi
     for size in input_sizes.iter() {
         input_vectors.push(shuffled(*size as i64));
     }
+    
+    println!("Input Generated");
 
     for t in threads.iter() {
         data.push(
@@ -87,8 +89,8 @@ pub fn plot_runtime_depending_on_threads() -> Result<(), Box<dyn std::error::Err
     let input_sizes: Vec<usize> = (3..=7).map(|exp| 10usize.pow(exp)).collect();
 
     // each thread and colour is a new line in the graph
-    let threads: Vec<usize> = vec![1, 2, 4, 8 /*, 16*/];
-    let colors = [&RED, &GREEN, &BLUE, &ORANGE /*, &BLACK*/];
+    let threads: Vec<usize> = vec![1, 2, 4, 8, 16];
+    let colors = [&RED, &GREEN, &BLUE, &ORANGE, &BLACK];
 
     // calculate the running time for each input size and thread number
     let data = create_data(input_sizes.clone(), threads.clone());
@@ -112,9 +114,9 @@ pub fn plot_runtime_depending_on_threads() -> Result<(), Box<dyn std::error::Err
         .configure_mesh()
         .max_light_lines(0)
         .y_label_formatter(&|y| format!("{:.1e}", y))
-        .y_desc("Runtime in milliseconds / input size")
+        .y_desc("Average runtime in milliseconds / input size")
         .x_label_formatter(&|x| format!("{:.0e}", x))
-        .x_desc("Input Size (logarithmic scale)")
+        .x_desc("Input size (logarithmic scale)")
         .draw()?;
 
     for i in 0..threads.len() {
@@ -142,7 +144,7 @@ pub fn plot_runtime_depending_on_threads() -> Result<(), Box<dyn std::error::Err
 
 pub fn plot_runtime_depending_on_input_generation() -> Result<(), Box<dyn std::error::Error>> {
     // corresponds to x axis
-    let input_sizes: Vec<usize> = (3..=7).map(|exp| 10usize.pow(exp)).collect();
+    let input_sizes: Vec<usize> = (3..=8).map(|exp| 10usize.pow(exp)).collect();
 
     // each type of input generation will correspond to a line in the graph
     let input_generation_function: Vec<MergeFunction> = vec![
@@ -170,15 +172,15 @@ pub fn plot_runtime_depending_on_input_generation() -> Result<(), Box<dyn std::e
         )
         .x_label_area_size(30)
         .y_label_area_size(55)
-        .build_cartesian_2d((800..10000000).log_scale(), (1e-3..1e2).log_scale())?;
+        .build_cartesian_2d((800..100000000).log_scale(), (3e-4..1e3).log_scale())?;
 
     chart
         .configure_mesh()
         .max_light_lines(0)
         .y_label_formatter(&|y| format!("{:.1e}", y))
-        .y_desc("Runtime in milliseconds (logarithmic scale)")
+        .y_desc("Average runtime in milliseconds (logarithmic scale)")
         .x_label_formatter(&|x| format!("{:.0e}", x))
-        .x_desc("Input Size (logarithmic scale)")
+        .x_desc("Input size (logarithmic scale)")
         .draw()?;
 
     for i in 0..input_generation_function.len() {
