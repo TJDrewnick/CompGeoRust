@@ -16,7 +16,7 @@ use std::time::Instant;
 pub const NUM_PROCESSORS_TEST: usize = 8;
 
 fn main() {
-    //let _ = plot_runtime_depending_on_threads();
+    let _ = plot_runtime_depending_on_threads();
     let _ = plot_runtime_depending_on_input_generation();
 
     // this can be used to run the merge sort on individual input sizes and thread counts

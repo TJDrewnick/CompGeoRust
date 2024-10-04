@@ -10,7 +10,7 @@ use plotters::prelude::*;
 use plotters::style::full_palette::ORANGE;
 use std::time::Instant;
 
-const TOTAL_EVALUATIONS: i32 = 8;
+const TOTAL_EVALUATIONS: i32 = 10;
 
 pub fn create_data(input_sizes: Vec<usize>, threads: Vec<usize>) -> Vec<Vec<(usize, f64)>> {
     let mut data: Vec<Vec<(usize, f64)>> = Vec::with_capacity(threads.len());
@@ -70,7 +70,7 @@ pub fn create_data_for_functions(
                             let mut output = vec![0; *n];
                             let now = Instant::now();
                             // switch to parallel_merge if that should be evaluated
-                            parallel_merge(&left, &right, &mut output, 8);
+                            sequential_merge(&left, &right, &mut output);
                             now.elapsed().as_secs_f64()
                         })
                         .sum();
@@ -86,7 +86,7 @@ pub fn create_data_for_functions(
 
 pub fn plot_runtime_depending_on_threads() -> Result<(), Box<dyn std::error::Error>> {
     // corresponds to x axis
-    let input_sizes: Vec<usize> = (3..=7).map(|exp| 10usize.pow(exp)).collect();
+    let input_sizes: Vec<usize> = (4..=8).map(|exp| 10usize.pow(exp)).collect();
 
     // each thread and colour is a new line in the graph
     let threads: Vec<usize> = vec![1, 2, 4, 8, 16];
@@ -96,19 +96,19 @@ pub fn plot_runtime_depending_on_threads() -> Result<(), Box<dyn std::error::Err
     let data = create_data(input_sizes.clone(), threads.clone());
 
     // plot
-    let root = BitMapBackend::new("runtime_plot_parallel_sort_parallel_merge.png", (640, 480))
+    let root = BitMapBackend::new("runtime_plot_parallel_sort_sequential_merge_zoomed.png", (640, 480))
         .into_drawing_area();
     let _ = root.fill(&WHITE);
     let root = root.margin(10, 10, 10, 10);
 
     let mut chart = ChartBuilder::on(&root)
         .caption(
-            "Runtime of Parallel Sorting using Parallel Merging",
-            ("times-new-roman", 30).into_font(),
+            "Runtime of Parallel Sorting using Sequential Merging - Zoomed",
+            ("times-new-roman", 26).into_font(),
         )
         .x_label_area_size(30)
         .y_label_area_size(55)
-        .build_cartesian_2d((800..10000000).log_scale(), 2e-5..4e-4)?;
+        .build_cartesian_2d((8000..100000000).log_scale(), 1e-6..3e-5)?;
 
     chart
         .configure_mesh()
@@ -144,7 +144,7 @@ pub fn plot_runtime_depending_on_threads() -> Result<(), Box<dyn std::error::Err
 
 pub fn plot_runtime_depending_on_input_generation() -> Result<(), Box<dyn std::error::Error>> {
     // corresponds to x axis
-    let input_sizes: Vec<usize> = (5..=9).map(|exp| 10usize.pow(exp)).collect();
+    let input_sizes: Vec<usize> = (3..=9).map(|exp| 10usize.pow(exp)).collect();
 
     // each type of input generation will correspond to a line in the graph
     let input_generation_function: Vec<MergeFunction> = vec![
@@ -161,18 +161,18 @@ pub fn plot_runtime_depending_on_input_generation() -> Result<(), Box<dyn std::e
 
     // plot
     let root =
-        BitMapBackend::new("runtime_plot_parallel_merge_zoomed.png", (640, 480)).into_drawing_area();
+        BitMapBackend::new("runtime_plot_sequential_merge.png", (640, 480)).into_drawing_area();
     let _ = root.fill(&WHITE);
     let root = root.margin(10, 10, 10, 10);
 
     let mut chart = ChartBuilder::on(&root)
         .caption(
-            "Runtime of Parallel Merging depending on Input - Zoomed",
-            ("times-new-roman", 26).into_font(),
+            "Runtime of Sequential Merging depending on Input",
+            ("times-new-roman", 30).into_font(),
         )
         .x_label_area_size(30)
         .y_label_area_size(55)
-        .build_cartesian_2d((80000..1000000000).log_scale(), 1e-7..5e-6)?;
+        .build_cartesian_2d((800..1000000000).log_scale(), 1e-7..5e-6)?;
 
     chart
         .configure_mesh()
