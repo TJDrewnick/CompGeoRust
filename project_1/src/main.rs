@@ -16,13 +16,13 @@ use std::time::Instant;
 pub const NUM_PROCESSORS_TEST: usize = 8;
 
 fn main() {
-    let _ = plot_runtime_depending_on_threads();
-    let _ = plot_runtime_depending_on_input_generation();
+    //let _ = plot_runtime_depending_on_threads();
+    //let _ = plot_runtime_depending_on_input_generation();
 
     // this can be used to run the merge sort on individual input sizes and thread counts
     // and measure the time of the specific strategy
     let args: Vec<String> = env::args().collect();
-    if !args.is_empty() {
+    if args.len() >= 4 {
         let input_size: usize = args[1].parse().unwrap();
         let num_processors: usize = args[2].parse().unwrap();
         let strategy = args[3].clone();
