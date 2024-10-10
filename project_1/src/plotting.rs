@@ -20,7 +20,7 @@ pub fn create_data(input_sizes: Vec<usize>, threads: Vec<usize>) -> Vec<Vec<(usi
     for size in input_sizes.iter() {
         input_vectors.push(shuffled(*size as i64));
     }
-    
+
     println!("Input Generated");
 
     for t in threads.iter() {
@@ -75,7 +75,10 @@ pub fn create_data_for_functions(
                         })
                         .sum();
                     // convert to milliseconds and normalise by number of evaluations
-                    (*n, (1000 / TOTAL_EVALUATIONS) as f64 * total_elapsed / *n as f64)
+                    (
+                        *n,
+                        (1000 / TOTAL_EVALUATIONS) as f64 * total_elapsed / *n as f64,
+                    )
                 })
                 .collect::<Vec<(usize, f64)>>(),
         )
@@ -96,8 +99,11 @@ pub fn plot_runtime_depending_on_threads() -> Result<(), Box<dyn std::error::Err
     let data = create_data(input_sizes.clone(), threads.clone());
 
     // plot
-    let root = BitMapBackend::new("runtime_plot_parallel_sort_sequential_merge_zoomed.png", (640, 480))
-        .into_drawing_area();
+    let root = BitMapBackend::new(
+        "runtime_plot_parallel_sort_sequential_merge_zoomed.png",
+        (640, 480),
+    )
+    .into_drawing_area();
     let _ = root.fill(&WHITE);
     let root = root.margin(10, 10, 10, 10);
 
