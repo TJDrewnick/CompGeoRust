@@ -1,36 +1,31 @@
+use crate::types::{Point, PointVector};
 use turborand::prelude::*;
 
-// data types for input generation
-#[derive(Debug, PartialEq)]
-struct Point {
-    x: i64,
-    y: i64,
-}
-
-type Input = Vec<Point>;
-
 // the different types of input
-struct UniformSquare();
-struct UniformCircle();
-struct Curve();
+pub struct UniformSquare();
+pub struct UniformCircle();
+pub struct Curve();
+pub struct Line();
 
 // implementing the input generation
 impl UniformSquare {
-    fn get_input(amount: usize, side_length: i64) -> Input {
+    pub fn get_input(amount: i64, side_length: i64) -> PointVector {
         // get x and y randomly
         let rand = Rng::new();
-        (0..amount)
-            .map(|_| Point {
-                x: rand.i64(0..=side_length),
-                y: rand.i64(0..=side_length),
-            })
-            .collect()
+        PointVector {
+            points: (0..amount)
+                .map(|_| Point {
+                    x: rand.i64(0..=side_length),
+                    y: rand.i64(0..=side_length),
+                })
+                .collect(),
+        }
     }
 }
 
 impl UniformCircle {
-    fn get_input(amount: usize, radius: i64) -> Input {
-        // get angle and distance randomly
+    pub fn get_input(amount: usize, radius: i64) -> PointVector {
+        // use rejection sampling
 
         let rand = Rng::new();
         let mut vec: Vec<Point> = Vec::with_capacity(amount);
@@ -45,13 +40,23 @@ impl UniformCircle {
                 vec.push(point);
             }
         }
-        vec
+        PointVector { points: vec }
     }
 }
 
 impl Curve {
-    fn get_input(length: i64) -> Input {
-        (0..length).map(|i| Point { x: i, y: -(i * i) }).collect()
+    pub fn get_input(length: i64) -> PointVector {
+        PointVector {
+            points: (0..length).map(|i| Point { x: i, y: -(i * i) }).collect(),
+        }
+    }
+}
+
+impl Line {
+    pub fn get_input(length: i64) -> PointVector {
+        PointVector {
+            points: (0..length).map(|i| Point { x: i, y: i }).collect(),
+        }
     }
 }
 
@@ -70,28 +75,22 @@ mod test {
         let mut x_bins = vec![0; side_length as usize];
         let mut y_bins = vec![0; side_length as usize];
 
-        uniform_square_input.iter().for_each(|point| {
+        uniform_square_input.points.iter().for_each(|point| {
             x_bins[point.x as usize] += 1;
             y_bins[point.y as usize] += 1;
         });
         for i in 0..side_length as usize {
-            assert!(
-                (x_bins[i] - (amount as i64 / side_length)).abs()
-                    <= (amount as i64 / (side_length * 10))
-            );
-            assert!(
-                (y_bins[i] - (amount as i64 / side_length)).abs()
-                    <= (amount as i64 / (side_length * 10))
-            );
+            assert!((x_bins[i] - (amount / side_length)).abs() <= (amount / (side_length * 10)));
+            assert!((y_bins[i] - (amount / side_length)).abs() <= (amount / (side_length * 10)));
         }
 
-        assert_eq!(uniform_square_input.len(), amount);
+        assert_eq!(uniform_square_input.points.len(), amount as usize);
     }
 
     #[test]
     fn uniform_circle_test() {
         let uniform_circle_input = UniformCircle::get_input(10, 5);
-        assert_eq!(uniform_circle_input.len(), 10);
+        assert_eq!(uniform_circle_input.points.len(), 10);
     }
 
     #[test]
@@ -109,6 +108,6 @@ mod test {
             Point { x: 8, y: -64 },
             Point { x: 9, y: -81 },
         ];
-        assert_eq!(expected, curve_input);
+        assert_eq!(expected, curve_input.points);
     }
 }
