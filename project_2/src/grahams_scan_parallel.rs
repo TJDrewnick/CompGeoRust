@@ -42,7 +42,6 @@ pub fn grahams_scan_parallel(input: PointVector, processors: usize) -> PointVect
     // merge upper hulls
     let mut i = 0;
     while i < processors - 1 {
-        println!("i: {:?}", i);
         let mut tangents: Vec<Tangent> = vec![]; // indices of the upper hulls and indices of the points that form the tangent
         let left_hull = upper_hulls[i].clone();
 
@@ -99,59 +98,37 @@ pub fn grahams_scan_parallel(input: PointVector, processors: usize) -> PointVect
             idx_in_tangents = k;
             break;
         }
-        
-        
+
         // set line segment as bridge between convex hull i and convex hull idx_in_tangents.
         // keep all points to the left of the first index (including the index) and all the points to the right of the second index (including the index)
 
         let tangent = &tangents[idx_in_tangents];
-        
-        let right_uh_idx = tangent.right_hull_idx; 
-        
-        println!("{:?}", tangent);
-        println!(
-            "upper hulls before deletion of points: {:?}",
-            upper_hulls
-                .iter()
-                .map(|x| x.points.len())
-                .collect::<Vec<usize>>()
-        );
-        
+
+        let right_uh_idx = tangent.right_hull_idx;
+
         // delete points in first upper hull after tangent origin point
-        upper_hulls[i]
-            .points
-            .truncate(tangent.left_point_idx + 1);
-        
+        upper_hulls[i].points.truncate(tangent.left_point_idx + 1);
+
         // delete points in destination upper hull after tangent destination point
         upper_hulls[right_uh_idx]
             .points
             .drain(0..tangent.right_point_idx);
-        
+
         // delete upper hulls between origin and destination upper hull
         for upper_hull in upper_hulls.iter_mut().take(right_uh_idx).skip(i + 1) {
             upper_hull.points = vec![];
         }
-        
-        println!(
-            "upper hulls after deletion of points: {:?}",
-            upper_hulls
-                .iter()
-                .map(|x| x.points.len())
-                .collect::<Vec<usize>>()
-        );
 
         // continue bridging from the right_uh_idx'th upper hull
         i = right_uh_idx;
     }
+
     // merge split upper hulls and return full upper hull
-    
-    
-    let mut result: PointVector = PointVector { points: vec![] };
-    for uh in upper_hulls {
-        result.points.extend(uh.points.iter());
+    PointVector {
+        points: upper_hulls
+            .into_iter()
+            .fold(vec![], |acc, hull| [acc, hull.points].concat()),
     }
-    result
-    //upper_hulls.into_iter().map(|x| x.points).flatten().collect::<PointVector>()
 }
 
 /**
