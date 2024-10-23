@@ -3,6 +3,7 @@ use crate::input_generation::Line;
 
 mod gift_wrapping;
 mod grahams_scan;
+mod grahams_scan_parallel;
 mod input_generation;
 mod types;
 mod utils;

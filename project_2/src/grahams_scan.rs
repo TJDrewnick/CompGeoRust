@@ -1,9 +1,9 @@
 use crate::types::{Point, PointVector, TurnType};
 use crate::utils::turn_type;
 
-pub fn grahams_scan(mut input: PointVector) -> PointVector {
-    // sort input based on x-coordinate O(n log n)
-    input.points.sort_by_key(|Point { x, y: _ }| *x);
+pub fn grahams_scan(input: PointVector) -> PointVector {
+    // assume the input is already sorted by x coordinate O(n log n)
+    // input.points.sort_by_key(|Point { x, y: _ }| *x);
 
     // init output to empty
     let mut upper_hull: PointVector = PointVector { points: Vec::new() };

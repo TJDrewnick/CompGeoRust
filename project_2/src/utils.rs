@@ -1,10 +1,10 @@
-use std::cmp::Ordering;
 use crate::types::{Point, TurnType};
+use std::cmp::Ordering;
 
 pub fn turn_type(p1: Point, p2: Point, p3: Point) -> TurnType {
     // determinant
     let determinant = p1.x * (p2.y - p3.y) + p2.x * (p3.y - p1.y) + p3.x * (p1.y - p2.y);
-    
+
     match determinant.cmp(&0) {
         Ordering::Greater => TurnType::Left,
         Ordering::Less => TurnType::Right,
@@ -33,10 +33,19 @@ mod tests {
         assert_eq!(turn_type(p1, p2, p3), TurnType::Right);
     }
 
+    #[test]
     fn straight() {
         let p1 = Point { x: 1, y: 1 };
         let p2 = Point { x: 2, y: 2 };
         let p3 = Point { x: 3, y: 3 };
+        assert_eq!(turn_type(p1, p2, p3), TurnType::Straight);
+    }
+
+    #[test]
+    fn straight_reverse() {
+        let p1 = Point { x: 1, y: 1 };
+        let p2 = Point { x: 3, y: 3 };
+        let p3 = Point { x: 2, y: 2 };
         assert_eq!(turn_type(p1, p2, p3), TurnType::Straight);
     }
 }

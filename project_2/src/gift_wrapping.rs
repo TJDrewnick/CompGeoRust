@@ -27,7 +27,6 @@ pub fn gift_wrapping_upper_hull(mut input: PointVector) -> PointVector {
         .max_by_key(|Point { x, y: _ }| *x)
         .unwrap();
 
-    /* it's always gift wrap o'clock somewhere in the world */
     // find the next pivot point - check for each point chosen if all other points are to the right of it
     loop {
         // if last upper hull point == rightmost point, we are done

@@ -16,3 +16,14 @@ pub enum TurnType {
     Right,
     Straight,
 }
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum Side {
+    Left,
+    Right,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Errors {
+    LowerHullError,
+}
