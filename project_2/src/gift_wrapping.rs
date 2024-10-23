@@ -17,8 +17,6 @@ pub fn gift_wrapping_upper_hull(mut input: PointVector) -> PointVector {
 
     input.points.swap_remove(leftmost_idx);
 
-    println!("{:?}", upper_hull);
-
     // stopping point is rightmost point
     let rightmost = input
         .points

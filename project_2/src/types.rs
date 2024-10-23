@@ -11,6 +11,15 @@ pub struct PointVector {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct Tangent {
+    pub left_hull_idx: usize,
+    pub right_hull_idx: usize,
+
+    pub left_point_idx: usize,
+    pub right_point_idx: usize,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum TurnType {
     Left,
     Right,

@@ -1,7 +1,6 @@
 use crate::grahams_scan::grahams_scan;
-use crate::types::{Errors, Point, PointVector, Side, TurnType};
+use crate::types::{Errors, Point, PointVector, Side, Tangent, TurnType};
 use crate::utils::{get_point_side, turn_type};
-use std::cmp::Ordering;
 use std::thread::ScopedJoinHandle;
 
 pub fn grahams_scan_parallel(input: PointVector, processors: usize) -> PointVector {
@@ -42,99 +41,117 @@ pub fn grahams_scan_parallel(input: PointVector, processors: usize) -> PointVect
 
     // merge upper hulls
     let mut i = 0;
-    while i < processors {
-        
-        let mut uh_indices_and_tangent_indices: Vec<((usize, usize), (usize, usize))> = vec![]; // indices of the upper hulls and indices of the points that form the tangent
-        if i + 1 != processors {
-            let left_hull = upper_hulls[i].clone();
+    while i < processors - 1 {
+        println!("i: {:?}", i);
+        let mut tangents: Vec<Tangent> = vec![]; // indices of the upper hulls and indices of the points that form the tangent
+        let left_hull = upper_hulls[i].clone();
 
-            for (j, right_hull) in upper_hulls.iter().enumerate().take(processors).skip(i + 1) {
-                // find tangent between i and j
-                uh_indices_and_tangent_indices.push(((i, j), get_tangent(&left_hull, right_hull)));
-            }
-            
-            /*for j in (i + 1)..processors {
-                let right_hull = upper_hulls[j].clone();
-                uh_indices_and_tangent_indices.push(((i, j), get_tangent(&left_hull, &right_hull)));
-            } */
+        for (j, right_hull) in upper_hulls.iter().enumerate().take(processors).skip(i + 1) {
+            // find tangent between i and j
+            let (l, r) = get_tangent(&left_hull, right_hull);
+            tangents.push(Tangent {
+                left_hull_idx: i,
+                right_hull_idx: j,
+                left_point_idx: l,
+                right_point_idx: r,
+            });
         }
-        
+
         // tangent, k, with the smallest rotation will be used as bridge.
         // tangent k should have all other convex hulls (and also all other points) to the right of it.
         // --> start point of tangent k, end point of tangent k should form a right turn with all other convex hulls (maybe with their end point?)
 
         // find k
-        for k in 0..uh_indices_and_tangent_indices.len() {
-            let uh_idx_and_tangent_idx: ((usize, usize), (usize, usize)) =
-                uh_indices_and_tangent_indices[k];
+        let mut idx_in_tangents: usize = 0;
+        for (k, tangent) in tangents.iter().enumerate() {
             let mut failed: bool = false;
-            if k + 1 < uh_indices_and_tangent_indices.len() {
-                
-                for next_tangent in uh_indices_and_tangent_indices.iter().skip(k + 1) {
-                    let tt: TurnType = turn_type(
-                        upper_hulls[uh_idx_and_tangent_idx.0 .0].points
-                            [uh_idx_and_tangent_idx.1 .0],
-                        upper_hulls[uh_idx_and_tangent_idx.0 .1].points
-                            [uh_idx_and_tangent_idx.1 .1],
-                        upper_hulls[next_tangent.0 .1].points[next_tangent.1 .1],
-                    );
-                    if tt == TurnType::Left {
-                        eprintln!("turn type left");
-                        // bail out fast: if forms left turn, try next tangent
+
+            for Tangent {
+                left_hull_idx: _,
+                right_hull_idx: hull_idx,
+                left_point_idx: _,
+                right_point_idx: point_idx,
+            } in tangents.iter().skip(k + 1)
+            {
+                match turn_type(
+                    upper_hulls[tangent.left_hull_idx].points[tangent.left_point_idx],
+                    upper_hulls[tangent.right_hull_idx].points[tangent.right_point_idx],
+                    upper_hulls[*hull_idx].points[*point_idx],
+                ) {
+                    TurnType::Left => {
+                        // only right turns permitted
                         failed = true;
                         break;
-                    } else {
-                        eprintln!("turn type {:?}", tt);
+                    }
+                    TurnType::Right => {
+                        continue;
+                    }
+                    TurnType::Straight => {
+                        // next point in line is guaranteed to have the same right turns
+                        failed = true;
+                        break;
                     }
                 }
-                
-                /*for idx_next in (k + 1)..uh_indices_and_tangent_indices.len() {
-                    let next_tangent: ((usize, usize), (usize, usize)) =
-                        uh_indices_and_tangent_indices[idx_next];
-
-                    let tt: TurnType = turn_type(
-                        upper_hulls[uh_idx_and_tangent_idx.0 .0].points
-                            [uh_idx_and_tangent_idx.1 .0],
-                        upper_hulls[uh_idx_and_tangent_idx.0 .1].points
-                            [uh_idx_and_tangent_idx.1 .1],
-                        upper_hulls[next_tangent.0 .1].points[next_tangent.1 .1],
-                    );
-                    if tt == TurnType::Left {
-                        eprintln!("turn type left");
-                        // bail out fast: if forms left turn, try next tangent
-                        failed = true;
-                        break;
-                    } else {
-                        eprintln!("turn type {:?}", tt);
-                    }
-                } */
             }
             if failed {
                 continue;
             }
-            // set line segment as bridge between convex hull i and convex hull k.
-            // keep all points to the left of the first index (including the index) and all the points to the right of the second index (including the index)
-            upper_hulls[uh_idx_and_tangent_idx.0 .0].points =
-                upper_hulls[uh_idx_and_tangent_idx.0 .0].points[0..uh_idx_and_tangent_idx.1 .0 + 1]
-                    .to_vec(); // keep left_uh points up to and including the tangent idx
-            upper_hulls[uh_idx_and_tangent_idx.0 .1].points =
-                upper_hulls[uh_idx_and_tangent_idx.0 .1].points[uh_idx_and_tangent_idx.1 .1..]
-                    .to_vec(); // keep right_uh points from and including the tangent idx
-                               // remove all upper hulls between the bridged upper hulls
-            for remove_idx in (uh_idx_and_tangent_idx.0 .0 + 1)..uh_idx_and_tangent_idx.0 .1 {
-                upper_hulls.swap_remove(remove_idx);
-            }
-
-            // continue bridging from the k'th upper hull
-            i = k
+            idx_in_tangents = k;
+            break;
         }
+        
+        
+        // set line segment as bridge between convex hull i and convex hull idx_in_tangents.
+        // keep all points to the left of the first index (including the index) and all the points to the right of the second index (including the index)
+
+        let tangent = &tangents[idx_in_tangents];
+        
+        let right_uh_idx = tangent.right_hull_idx; 
+        
+        println!("{:?}", tangent);
+        println!(
+            "upper hulls before deletion of points: {:?}",
+            upper_hulls
+                .iter()
+                .map(|x| x.points.len())
+                .collect::<Vec<usize>>()
+        );
+        
+        // delete points in first upper hull after tangent origin point
+        upper_hulls[i]
+            .points
+            .truncate(tangent.left_point_idx + 1);
+        
+        // delete points in destination upper hull after tangent destination point
+        upper_hulls[right_uh_idx]
+            .points
+            .drain(0..tangent.right_point_idx);
+        
+        // delete upper hulls between origin and destination upper hull
+        for upper_hull in upper_hulls.iter_mut().take(right_uh_idx).skip(i + 1) {
+            upper_hull.points = vec![];
+        }
+        
+        println!(
+            "upper hulls after deletion of points: {:?}",
+            upper_hulls
+                .iter()
+                .map(|x| x.points.len())
+                .collect::<Vec<usize>>()
+        );
+
+        // continue bridging from the right_uh_idx'th upper hull
+        i = right_uh_idx;
     }
     // merge split upper hulls and return full upper hull
+    
+    
     let mut result: PointVector = PointVector { points: vec![] };
     for uh in upper_hulls {
         result.points.extend(uh.points.iter());
     }
     result
+    //upper_hulls.into_iter().map(|x| x.points).flatten().collect::<PointVector>()
 }
 
 /**
@@ -287,8 +304,8 @@ fn get_tangent_from_point(hull: &PointVector, point: Point) -> Result<usize, Err
                 | (Side::Left, TurnType::Left, TurnType::Straight)
                 | (Side::Left, TurnType::Straight, TurnType::Left)
                 | (Side::Right, TurnType::Right, TurnType::Right)
-                | (Side::Right, TurnType::Right, TurnType::Straight) => candidate = right,
-                (Side::Right, TurnType::Straight, TurnType::Right) => {
+                | (Side::Right, TurnType::Right, TurnType::Straight)
+                | (Side::Right, TurnType::Straight, TurnType::Right) => {
                     return Err(Errors::LowerHullError)
                 }
             }
@@ -301,7 +318,7 @@ fn get_tangent_from_point(hull: &PointVector, point: Point) -> Result<usize, Err
 #[cfg(test)]
 mod test {
     use crate::grahams_scan_parallel::{
-        get_tangent_from_point, grahams_scan_parallel, is_upper_hull_tangent,
+        get_tangent, get_tangent_from_point, grahams_scan_parallel, is_upper_hull_tangent,
     };
     use crate::input_generation::{Curve, Line};
     use crate::types::{Point, PointVector};
@@ -381,5 +398,69 @@ mod test {
         };
         let point: Point = Point { x: 0, y: 0 };
         assert!(is_upper_hull_tangent(&upper_hull, 0, point));
+    }
+
+    #[test]
+    fn tangent_between_two_hulls_random() {
+        let left_hull: PointVector = PointVector {
+            points: vec![
+                Point { x: 2, y: 1 },
+                Point { x: 3, y: 3 },
+                Point { x: 5, y: 4 },
+                Point { x: 9, y: 3 },
+                Point { x: 11, y: 1 },
+            ],
+        };
+        let right_hull: PointVector = PointVector {
+            points: vec![
+                Point { x: 12, y: 5 },
+                Point { x: 14, y: 7 },
+                Point { x: 16, y: 6 },
+                Point { x: 17, y: 2 },
+            ],
+        };
+        assert_eq!(get_tangent(&left_hull, &right_hull), (2, 1));
+    }
+
+    #[test]
+    fn tangent_between_two_hulls_curve() {
+        let left_hull: PointVector = PointVector {
+            points: vec![
+                Point { x: 1, y: -1 },
+                Point { x: 2, y: -4 },
+                Point { x: 3, y: -9 },
+                Point { x: 4, y: -16 },
+            ],
+        };
+        let right_hull: PointVector = PointVector {
+            points: vec![
+                Point { x: 5, y: -25 },
+                Point { x: 6, y: -36 },
+                Point { x: 7, y: -49 },
+                Point { x: 8, y: -64 },
+            ],
+        };
+        assert_eq!(get_tangent(&left_hull, &right_hull), (3, 0));
+    }
+
+    #[test]
+    fn tangent_between_two_hulls_curve_skip1() {
+        let left_hull: PointVector = PointVector {
+            points: vec![
+                Point { x: 1, y: -1 },
+                Point { x: 2, y: -4 },
+                Point { x: 3, y: -9 },
+                Point { x: 4, y: -16 },
+            ],
+        };
+        let right_hull: PointVector = PointVector {
+            points: vec![
+                Point { x: 6, y: -36 },
+                Point { x: 7, y: -49 },
+                Point { x: 8, y: -64 },
+                Point { x: 9, y: -81 },
+            ],
+        };
+        assert_eq!(get_tangent(&left_hull, &right_hull), (3, 0));
     }
 }
