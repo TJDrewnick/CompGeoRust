@@ -58,5 +58,4 @@ pub struct Plot {
 pub struct Experiment {
     pub name: String,
     pub run_times: Vec<f64>,
-    pub upper_hull_lengths: Vec<usize>,
 }

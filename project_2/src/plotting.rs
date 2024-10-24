@@ -23,7 +23,7 @@ pub fn plot(plot: Plot) {
         .configure_mesh()
         .max_light_lines(0)
         .y_label_formatter(&|y| format!("{:.1e}", y))
-        .y_desc("Average Runtime")
+        .y_desc("Average Runtime (logarithmic scale)")
         .x_label_formatter(&|x| format!("{:.0e}", x))
         .x_desc("Input Size (logarithmic scale)")
         .draw()
@@ -38,8 +38,64 @@ pub fn plot(plot: Plot) {
                         .zip(experiment.run_times.clone())
                         .map(|(x, run_time)| (*x, run_time)),
                     colors[i],
-                )
-                //.point_size(2),
+                ), //.point_size(2),
+            )
+            .unwrap()
+            .label(experiment.name.clone())
+            .legend({
+                let color = colors[i];
+                move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color)
+            });
+    }
+
+    chart
+        .configure_series_labels()
+        .position(SeriesLabelPosition::UpperLeft)
+        .border_style(BLACK)
+        .background_style(WHITE.mix(0.75))
+        .draw()
+        .unwrap();
+
+    root.present().unwrap();
+}
+
+pub fn plot_upper_hull_points(plot: Plot) {
+    let colors = [&RED, &GREEN, &BLUE, &ORANGE, &BLACK];
+
+    let x_first = (plot.input_sizes[0] as f64 * 0.8) as i64;
+    let x_last = (plot.input_sizes[plot.input_sizes.len() - 1] as f64 * 1.2) as i64;
+
+    let root = BitMapBackend::new(plot.path.as_str(), (640, 480)).into_drawing_area();
+    let _ = root.fill(&WHITE);
+    let root = root.margin(10, 10, 10, 10);
+
+    let mut chart = ChartBuilder::on(&root)
+        .caption(plot.title, ("sans-serif", 26).into_font())
+        .x_label_area_size(30)
+        .y_label_area_size(55)
+        .build_cartesian_2d((x_first..x_last).log_scale(), plot.y_range)
+        .unwrap();
+
+    chart
+        .configure_mesh()
+        .max_light_lines(0)
+        .y_label_formatter(&|y| format!("{:.1e}", y))
+        .y_desc("Points on Upper Hull")
+        .x_label_formatter(&|x| format!("{:.0e}", x))
+        .x_desc("Input Size (logarithmic scale)")
+        .draw()
+        .unwrap();
+
+    for (i, experiment) in plot.experiments.iter().enumerate() {
+        chart
+            .draw_series(
+                LineSeries::new(
+                    plot.input_sizes
+                        .iter()
+                        .zip(experiment.run_times.clone())
+                        .map(|(x, run_time)| (*x, run_time)),
+                    colors[i],
+                ), //.point_size(2),
             )
             .unwrap()
             .label(experiment.name.clone())
