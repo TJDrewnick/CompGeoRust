@@ -5,6 +5,7 @@ use turborand::prelude::*;
 pub struct UniformSquare();
 pub struct UniformCircle();
 pub struct Curve();
+pub struct InverseCurve();
 pub struct Line();
 
 // implementing the input generation
@@ -54,6 +55,14 @@ impl Curve {
     }
 }
 
+impl InverseCurve {
+    pub fn get_input(length: i64) -> PointVector {
+        PointVector {
+            points: (0..length).map(|i| Point { x: i, y: i * i }).collect(),
+        }
+    }
+}
+
 impl Line {
     pub fn get_input(length: i64) -> PointVector {
         PointVector {
@@ -64,7 +73,7 @@ impl Line {
 
 #[cfg(test)]
 mod test {
-    use crate::input_generation::{Curve, Point, UniformCircle};
+    use crate::input_generation::{Curve, InverseCurve, Point, UniformCircle};
 
     #[test]
     fn uniform_circle_test() {
@@ -88,5 +97,23 @@ mod test {
             Point { x: 9, y: -81 },
         ];
         assert_eq!(expected, curve_input.points);
+    }
+
+    #[test]
+    fn inverse_curve_test() {
+        let inverse_curve_input = InverseCurve::get_input(10);
+        let expected = vec![
+            Point { x: 0, y: 0 },
+            Point { x: 1, y: 1 },
+            Point { x: 2, y: 4 },
+            Point { x: 3, y: 9 },
+            Point { x: 4, y: 16 },
+            Point { x: 5, y: 25 },
+            Point { x: 6, y: 36 },
+            Point { x: 7, y: 49 },
+            Point { x: 8, y: 64 },
+            Point { x: 9, y: 81 },
+        ];
+        assert_eq!(expected, inverse_curve_input.points);
     }
 }

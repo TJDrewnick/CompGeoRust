@@ -11,7 +11,7 @@ pub fn gift_wrapping_upper_hull(
         .points
         .iter()
         .enumerate()
-        .min_by_key(|(id, Point { x, y: _ })| *x)
+        .min_by_key(|(_, Point { x, y: _ })| *x)
         .unwrap();
 
     // leftmost point is guaranteed to be in upper hull

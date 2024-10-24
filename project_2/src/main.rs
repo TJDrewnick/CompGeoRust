@@ -1,9 +1,9 @@
 use crate::gift_wrapping::gift_wrapping_upper_hull;
 use crate::grahams_scan::grahams_scan;
 use crate::grahams_scan_parallel::grahams_scan_parallel;
-use crate::input_generation::{Curve, Line, UniformCircle, UniformSquare};
+use crate::input_generation::{Curve, InverseCurve, Line, UniformCircle, UniformSquare};
 use crate::plotting::plot;
-use crate::types::{Experiment, InputFunction, Plot};
+use crate::types::{Experiment, InputFunction, Plot, Point};
 use std::time::Instant;
 
 mod gift_wrapping;
@@ -21,36 +21,43 @@ fn main() {
 
     // grahams scan, gift wrapping, parallel grahams scan (8 cores) on all inputs
     // annotate with number of points on upper hull
-    let input_sizes: Vec<i64> = (2..=7).map(|exp| 10i64.pow(exp)).collect();
+    let input_sizes: Vec<i64> = (2..=5).map(|exp| 10i64.pow(exp)).collect();
     let input_types: Vec<(InputFunction, String)> = vec![
         (UniformSquare::get_input, "Uniform Square".to_string()),
         (UniformCircle::get_input, "Uniform Circle".to_string()),
-        (Curve::get_input, "Curve".to_string()),
+        (Curve::get_input, "Downwards Curve".to_string()),
+        (InverseCurve::get_input, "Upwards Curve".to_string()),
         (Line::get_input, "Line".to_string()),
     ];
 
     let grahams_all_inputs = Plot {
         title: "Grahams Scan on different Inputs".to_string(),
+        path: "project_2/plots/grahams_inputs.png".to_string(),
         experiments: vec![],
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan,
         args: (Option::from(true), None),
+        y_range: 5e-7..5e-2,
     };
 
     let gift_wrapping_all_inputs = Plot {
         title: "Gift Wrapping on different Inputs".to_string(),
+        path: "project_2/plots/gift_wrapping_inputs.png".to_string(),
         experiments: vec![],
         input_sizes: input_sizes.clone(),
         algorithm: gift_wrapping_upper_hull,
         args: (None, None),
+        y_range: 5e-7..5e-2,
     };
 
     let grahams_parallel_all_inputs = Plot {
-        title: "Parallel Grahams Scan on different Inputs".to_string(),
+        title: "8-threaded Parallel Grahams Scan on different Inputs".to_string(),
+        path: "project_2/plots/grahams_parallel_inputs.png".to_string(),
         experiments: vec![],
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel,
         args: (Option::from(true), Option::from(8)),
+        y_range: 5e-7..5e-2,
     };
 
     let mut input_plots = vec![
@@ -81,22 +88,24 @@ fn main() {
                 {
                     break;
                 }
-                
+
                 let upper_hull_algorithm = input_plot.algorithm;
-                
+
                 // calculate the runtime 4 additional times to get the more consistent average
-                let mut total_runtime: f64 = (0..4).map(|_| {
-                    let input = function(*input_size);
-                    let now = Instant::now();
-                    upper_hull_algorithm(input, input_plot.args.0, input_plot.args.1);
-                    now.elapsed().as_secs_f64()
-                }).sum();
+                let mut total_runtime: f64 = (0..4)
+                    .map(|_| {
+                        let input = function(*input_size);
+                        let now = Instant::now();
+                        upper_hull_algorithm(input, input_plot.args.0, input_plot.args.1);
+                        now.elapsed().as_secs_f64()
+                    })
+                    .sum();
 
                 let input = function(*input_size);
                 let now = Instant::now();
                 let result = upper_hull_algorithm(input, input_plot.args.0, input_plot.args.1);
                 total_runtime += now.elapsed().as_secs_f64();
-                
+
                 let avg_runtime = total_runtime / 5.0;
                 println!("{}: {}", input_size, avg_runtime);
 
@@ -110,37 +119,56 @@ fn main() {
 
     // grahams scan vs parallel grahams scan on one input with different cores
     let threads = vec![1, 2, 4, 8, 16];
-    let input_function = UniformCircle::get_input;
-    
+    let input_function = UniformSquare::get_input;
+
     let mut grahams_parallel_different_threads = Plot {
-        title: "Parallel Grahams Scan with increasing number of threads".to_string(),
+        title: "Multithreaded Parallel Grahams Scan".to_string(),
+        path: "project_2/plots/grahams_parallel_threads.png".to_string(),
         experiments: vec![],
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel,
-        args: (Option::from(false), Option::from(1)),
+        args: (Option::from(true), Option::from(1)), // TODO CHANGE TO FALSE and fix below
+        y_range: 5e-7..5e-2,
     };
-    
+
     for thread in threads {
+        println!(
+            "{} threads, {}",
+            thread, grahams_parallel_different_threads.title
+        );
+
         let mut experiment = Experiment {
             name: format!("{} threads", thread).to_string(),
             run_times: vec![],
             upper_hull_lengths: vec![],
         };
-        
+
         for input_size in &input_sizes {
             let upper_hull_algorithm = grahams_parallel_different_threads.algorithm;
 
             // calculate the runtime 4 additional times to get the more consistent average
-            let mut total_runtime: f64 = (0..4).map(|_| {
-                let input = input_function(*input_size);
-                let now = Instant::now();
-                upper_hull_algorithm(input, grahams_parallel_different_threads.args.0, Some(thread));
-                now.elapsed().as_secs_f64()
-            }).sum();
+            let mut total_runtime: f64 = (0..4)
+                .map(|_| {
+                    let mut input = input_function(*input_size);
+                    input.points.sort_by_key(|Point { x, y: _ }| *x);
+
+                    let now = Instant::now();
+                    upper_hull_algorithm(
+                        input,
+                        grahams_parallel_different_threads.args.0,
+                        Some(thread),
+                    );
+                    now.elapsed().as_secs_f64()
+                })
+                .sum();
 
             let input = input_function(*input_size);
             let now = Instant::now();
-            let result = upper_hull_algorithm(input, grahams_parallel_different_threads.args.0, Some(thread));
+            let result = upper_hull_algorithm(
+                input,
+                grahams_parallel_different_threads.args.0,
+                Some(thread),
+            );
             total_runtime += now.elapsed().as_secs_f64();
 
             let avg_runtime = total_runtime / 5.0;
@@ -149,20 +177,23 @@ fn main() {
             experiment.run_times.push(avg_runtime);
             experiment.upper_hull_lengths.push(result.points.len());
         }
-        grahams_parallel_different_threads.experiments.push(experiment);
+        grahams_parallel_different_threads
+            .experiments
+            .push(experiment);
     }
-    
-    
+
     // plot results
 
     // input_plots are grouped by solver
     for solver_plot in input_plots.iter() {
-        plot(solver_plot.clone())
+        plot(solver_plot.clone());
     }
-    
+
     // plot grouped by input generation
     let uniform_square_plot = Plot {
-        title: "Performance of different Algorithms on Uniformly Distributed Points in a Square".to_string(),
+        title: "Performance on Uniformly Distributed Points in a Square"
+            .to_string(),
+        path: "project_2/plots/uniform_square_plot.png".to_string(),
         experiments: vec![
             Experiment {
                 name: "Grahams Scan".to_string(),
@@ -175,17 +206,20 @@ fn main() {
                 upper_hull_lengths: input_plots[1].experiments[0].upper_hull_lengths.clone(),
             },
             Experiment {
-                name: "Grahams Scan".to_string(),
+                name: "Parallel Grahams Scan".to_string(),
                 run_times: input_plots[2].experiments[0].run_times.clone(),
                 upper_hull_lengths: input_plots[2].experiments[0].upper_hull_lengths.clone(),
-            }
+            },
         ],
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
+        y_range: 5e-7..5e-2,
     };
     let uniform_circle_plot = Plot {
-        title: "Performance of different Algorithms on Uniformly Distributed Points in a Square".to_string(),
+        title: "Performance on Uniformly Distributed Points in a Circle"
+            .to_string(),
+        path: "project_2/plots/uniform_circle_plot.png".to_string(),
         experiments: vec![
             Experiment {
                 name: "Grahams Scan".to_string(),
@@ -198,17 +232,20 @@ fn main() {
                 upper_hull_lengths: input_plots[1].experiments[1].upper_hull_lengths.clone(),
             },
             Experiment {
-                name: "Grahams Scan".to_string(),
+                name: "Parallel Grahams Scan".to_string(),
                 run_times: input_plots[2].experiments[1].run_times.clone(),
                 upper_hull_lengths: input_plots[2].experiments[1].upper_hull_lengths.clone(),
-            }
+            },
         ],
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
+        y_range: 5e-7..5e-2,
     };
     let curve_plot = Plot {
-        title: "Performance of different Algorithms on Uniformly Distributed Points in a Square".to_string(),
+        title: "Performance on Points on a Downwards Curve"
+            .to_string(),
+        path: "project_2/plots/curve_plot.png".to_string(),
         experiments: vec![
             Experiment {
                 name: "Grahams Scan".to_string(),
@@ -221,17 +258,20 @@ fn main() {
                 upper_hull_lengths: input_plots[1].experiments[2].upper_hull_lengths.clone(),
             },
             Experiment {
-                name: "Grahams Scan".to_string(),
+                name: "Parallel Grahams Scan".to_string(),
                 run_times: input_plots[2].experiments[2].run_times.clone(),
                 upper_hull_lengths: input_plots[2].experiments[2].upper_hull_lengths.clone(),
-            }
+            },
         ],
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
+        y_range: 5e-7..5e-2,
     };
-    let line_plot = Plot {
-        title: "Performance of different Algorithms on Uniformly Distributed Points in a Square".to_string(),
+    let upwards_curve_plot = Plot {
+        title: "Performance on Points on an Upwards Curve"
+            .to_string(),
+        path: "project_2/plots/upwards_curve_plot.png".to_string(),
         experiments: vec![
             Experiment {
                 name: "Grahams Scan".to_string(),
@@ -244,19 +284,47 @@ fn main() {
                 upper_hull_lengths: input_plots[1].experiments[3].upper_hull_lengths.clone(),
             },
             Experiment {
-                name: "Grahams Scan".to_string(),
+                name: "Parallel Grahams Scan".to_string(),
                 run_times: input_plots[2].experiments[3].run_times.clone(),
                 upper_hull_lengths: input_plots[2].experiments[3].upper_hull_lengths.clone(),
-            }
+            },
         ],
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
+        y_range: 5e-7..5e-2,
     };
-    
+    let line_plot = Plot {
+        title: "Performance on Points on a Line"
+            .to_string(),
+        path: "project_2/plots/line_plot.png".to_string(),
+        experiments: vec![
+            Experiment {
+                name: "Grahams Scan".to_string(),
+                run_times: input_plots[0].experiments[4].run_times.clone(),
+                upper_hull_lengths: input_plots[0].experiments[4].upper_hull_lengths.clone(),
+            },
+            Experiment {
+                name: "Gift Wrapping".to_string(),
+                run_times: input_plots[1].experiments[4].run_times.clone(),
+                upper_hull_lengths: input_plots[1].experiments[4].upper_hull_lengths.clone(),
+            },
+            Experiment {
+                name: "Parallel Grahams Scan".to_string(),
+                run_times: input_plots[2].experiments[4].run_times.clone(),
+                upper_hull_lengths: input_plots[2].experiments[4].upper_hull_lengths.clone(),
+            },
+        ],
+        input_sizes: input_sizes.clone(),
+        algorithm: grahams_scan_parallel, // not needed
+        args: (None, None),
+        y_range: 5e-7..5e-2,
+    };
+
     plot(uniform_square_plot);
     plot(uniform_circle_plot);
     plot(curve_plot);
+    plot(upwards_curve_plot);
     plot(line_plot);
 
     // plot parallel comparison

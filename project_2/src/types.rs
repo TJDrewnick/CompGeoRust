@@ -1,4 +1,4 @@
-use std::fmt::Arguments;
+use std::ops::Range;
 
 // data types for input generation
 #[derive(Debug, PartialEq, Copy, Clone, Ord, Eq, PartialOrd)]
@@ -46,10 +46,12 @@ pub type ConvexHullAlgorithm = fn(PointVector, Option<bool>, Option<usize>) -> P
 #[derive(Debug, PartialEq, Clone)]
 pub struct Plot {
     pub title: String,
+    pub path: String,
     pub experiments: Vec<Experiment>,
     pub input_sizes: Vec<i64>,
     pub algorithm: ConvexHullAlgorithm,
     pub args: (Option<bool>, Option<usize>),
+    pub y_range: Range<f64>,
 }
 
 #[derive(Debug, PartialEq, Clone)]

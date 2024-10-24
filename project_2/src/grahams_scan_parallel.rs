@@ -253,9 +253,16 @@ fn get_tangent_from_point(hull: &PointVector, point: Point) -> Result<usize, Err
         };
     } else {
         // hull is at least 3 elements long
+
+        /*
         let mut candidate = hull.points.len() / 2;
+        */
+        let mut low = 0;
+        let mut high = hull.points.len() - 1;
+        let mut candidate: usize;
 
         loop {
+            candidate = (high + low) / 2;
             // if moved to edge, this is the connection to the upper hull
             if candidate == 0 {
                 return Ok(0);
@@ -279,12 +286,12 @@ fn get_tangent_from_point(hull: &PointVector, point: Point) -> Result<usize, Err
                 (Side::Left, TurnType::Right, TurnType::Left)
                 | (Side::Left, TurnType::Right, TurnType::Straight)
                 | (Side::Left, TurnType::Straight, TurnType::Straight)
-                | (Side::Right, TurnType::Left, TurnType::Right) => candidate = right,
+                | (Side::Right, TurnType::Left, TurnType::Right) => low = candidate + 1,
                 // move to left
                 (Side::Left, TurnType::Left, TurnType::Right)
                 | (Side::Right, TurnType::Right, TurnType::Left)
                 | (Side::Right, TurnType::Straight, TurnType::Left)
-                | (Side::Right, TurnType::Straight, TurnType::Straight) => candidate = left,
+                | (Side::Right, TurnType::Straight, TurnType::Straight) => high = candidate,
                 // given hull was not an upper hull
                 (Side::Left, TurnType::Left, TurnType::Left)
                 | (Side::Left, TurnType::Left, TurnType::Straight)
