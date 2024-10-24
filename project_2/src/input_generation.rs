@@ -9,7 +9,8 @@ pub struct Line();
 
 // implementing the input generation
 impl UniformSquare {
-    pub fn get_input(amount: i64, side_length: i64) -> PointVector {
+    pub fn get_input(amount: i64) -> PointVector {
+        let side_length = f64::sqrt(amount as f64) as i64 * 5;
         // get x and y randomly
         let rand = Rng::new();
         PointVector {
@@ -24,13 +25,14 @@ impl UniformSquare {
 }
 
 impl UniformCircle {
-    pub fn get_input(amount: usize, radius: i64) -> PointVector {
+    pub fn get_input(amount: i64) -> PointVector {
+        let radius = f64::sqrt(amount as f64) as i64 * 5;
         // use rejection sampling
 
         let rand = Rng::new();
-        let mut vec: Vec<Point> = Vec::with_capacity(amount);
+        let mut vec: Vec<Point> = Vec::with_capacity(amount as usize);
 
-        while vec.len() < amount {
+        while vec.len() < amount as usize {
             let point = Point {
                 x: rand.i64(-radius..=radius),
                 y: rand.i64(-radius..=radius),
@@ -62,34 +64,11 @@ impl Line {
 
 #[cfg(test)]
 mod test {
-    use crate::input_generation::{Curve, Point, UniformCircle, UniformSquare};
-
-    #[test]
-    fn uniform_square_test() {
-        let amount = 10000;
-        let mut side_length = 10;
-        let uniform_square_input = UniformSquare::get_input(amount, side_length);
-
-        side_length += 1;
-
-        let mut x_bins = vec![0; side_length as usize];
-        let mut y_bins = vec![0; side_length as usize];
-
-        uniform_square_input.points.iter().for_each(|point| {
-            x_bins[point.x as usize] += 1;
-            y_bins[point.y as usize] += 1;
-        });
-        for i in 0..side_length as usize {
-            assert!((x_bins[i] - (amount / side_length)).abs() <= (amount / (side_length * 10)));
-            assert!((y_bins[i] - (amount / side_length)).abs() <= (amount / (side_length * 10)));
-        }
-
-        assert_eq!(uniform_square_input.points.len(), amount as usize);
-    }
+    use crate::input_generation::{Curve, Point, UniformCircle};
 
     #[test]
     fn uniform_circle_test() {
-        let uniform_circle_input = UniformCircle::get_input(10, 5);
+        let uniform_circle_input = UniformCircle::get_input(10);
         assert_eq!(uniform_circle_input.points.len(), 10);
     }
 

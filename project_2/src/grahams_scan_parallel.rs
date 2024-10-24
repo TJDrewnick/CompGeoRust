@@ -3,9 +3,18 @@ use crate::types::{Errors, Point, PointVector, Side, Tangent, TurnType};
 use crate::utils::{get_point_side, turn_type};
 use std::thread::ScopedJoinHandle;
 
-pub fn grahams_scan_parallel(input: PointVector, processors: usize) -> PointVector {
-    // assume the input is already sorted by x coordinate O(n log n)
-    // input.points.sort_by_key(|Point { x, y: _ }| *x);
+pub fn grahams_scan_parallel(
+    mut input: PointVector,
+    sort_input: Option<bool>,
+    processors: Option<usize>,
+) -> PointVector {
+    // most of the time the input is already sorted by x coordinate O(n log n),
+    // but allow to also sort if needed
+    if sort_input.unwrap_or(true) {
+        input.points.sort_by_key(|Point { x, y: _ }| *x);
+    }
+
+    let processors = processors.unwrap_or(1);
 
     let splits = input.points.len() / processors;
     let mut upper_hulls: Vec<PointVector> = Vec::with_capacity(processors);
@@ -24,11 +33,11 @@ pub fn grahams_scan_parallel(input: PointVector, processors: usize) -> PointVect
                 points: input.points[(i - 1) * splits..i * splits].to_vec(),
             };
 
-            let handle = scope.spawn(|| grahams_scan(current_split));
+            let handle = scope.spawn(|| grahams_scan(current_split, Option::from(false), None));
             handles.push(handle);
         }
         // get result from last split of Points
-        let last_result = grahams_scan(last_split);
+        let last_result = grahams_scan(last_split, Option::from(false), None);
 
         // collect all results
         for handle in handles {
@@ -302,7 +311,8 @@ mod test {
 
     #[test]
     fn line_hull_2p() {
-        let upper_hull: PointVector = grahams_scan_parallel(Line::get_input(50), 2);
+        let upper_hull: PointVector =
+            grahams_scan_parallel(Line::get_input(50), Option::from(false), Option::from(2));
         assert_eq!(
             upper_hull.points,
             vec![Point { x: 0, y: 0 }, Point { x: 49, y: 49 }]
@@ -311,7 +321,8 @@ mod test {
 
     #[test]
     fn line_hull_6p() {
-        let upper_hull: PointVector = grahams_scan_parallel(Line::get_input(50), 6);
+        let upper_hull: PointVector =
+            grahams_scan_parallel(Line::get_input(50), Option::from(false), Option::from(6));
         assert_eq!(
             upper_hull.points,
             vec![Point { x: 0, y: 0 }, Point { x: 49, y: 49 }]
@@ -320,13 +331,15 @@ mod test {
 
     #[test]
     fn curve_hull_2p() {
-        let upper_hull: PointVector = grahams_scan_parallel(Curve::get_input(50), 2);
+        let upper_hull: PointVector =
+            grahams_scan_parallel(Curve::get_input(50), Option::from(false), Option::from(2));
         assert_eq!(upper_hull.points, Curve::get_input(50).points);
     }
 
     #[test]
     fn curve_hull_6p() {
-        let upper_hull: PointVector = grahams_scan_parallel(Curve::get_input(50), 6);
+        let upper_hull: PointVector =
+            grahams_scan_parallel(Curve::get_input(50), Option::from(false), Option::from(6));
         assert_eq!(upper_hull.points, Curve::get_input(50).points);
     }
 

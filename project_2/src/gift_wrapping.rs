@@ -1,7 +1,11 @@
 use crate::types::{Point, PointVector, TurnType};
 use crate::utils::turn_type;
 
-pub fn gift_wrapping_upper_hull(mut input: PointVector) -> PointVector {
+pub fn gift_wrapping_upper_hull(
+    mut input: PointVector,
+    _: Option<bool>,
+    _: Option<usize>,
+) -> PointVector {
     // init - find leftmost point
     let (leftmost_idx, leftmost) = input
         .points
@@ -63,7 +67,7 @@ mod test {
 
     #[test]
     fn line_hull() {
-        let upper_hull = gift_wrapping_upper_hull(Line::get_input(10));
+        let upper_hull = gift_wrapping_upper_hull(Line::get_input(10), None, None);
         assert_eq!(
             upper_hull.points,
             vec![Point { x: 0, y: 0 }, Point { x: 9, y: 9 }]
@@ -72,27 +76,31 @@ mod test {
 
     #[test]
     fn curve_hull() {
-        let upper_hull = gift_wrapping_upper_hull(Curve::get_input(10));
+        let upper_hull = gift_wrapping_upper_hull(Curve::get_input(10), None, None);
         assert_eq!(upper_hull.points, Curve::get_input(10).points);
     }
 
     /** One time randomly generated but deterministic to be verifiable */
     #[test]
     fn random_hull() {
-        let upper_hull = gift_wrapping_upper_hull(PointVector {
-            points: vec![
-                Point { x: 0, y: 0 },
-                Point { x: 1, y: 1 },
-                Point { x: 1, y: 3 },
-                Point { x: 2, y: 5 },
-                Point { x: 3, y: 2 },
-                Point { x: 4, y: 4 },
-                Point { x: 4, y: 1 },
-                Point { x: 5, y: 6 },
-                Point { x: 6, y: 4 },
-                Point { x: 7, y: 4 },
-            ],
-        });
+        let upper_hull = gift_wrapping_upper_hull(
+            PointVector {
+                points: vec![
+                    Point { x: 0, y: 0 },
+                    Point { x: 1, y: 1 },
+                    Point { x: 1, y: 3 },
+                    Point { x: 2, y: 5 },
+                    Point { x: 3, y: 2 },
+                    Point { x: 4, y: 4 },
+                    Point { x: 4, y: 1 },
+                    Point { x: 5, y: 6 },
+                    Point { x: 6, y: 4 },
+                    Point { x: 7, y: 4 },
+                ],
+            },
+            None,
+            None,
+        );
         let expected = vec![
             Point { x: 0, y: 0 },
             Point { x: 1, y: 3 },

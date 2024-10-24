@@ -3,7 +3,9 @@ use std::cmp::Ordering;
 
 pub fn turn_type(p1: Point, p2: Point, p3: Point) -> TurnType {
     // determinant
-    let determinant = p1.x * (p2.y - p3.y) + p2.x * (p3.y - p1.y) + p3.x * (p1.y - p2.y);
+    let determinant = p1.x as i128 * (p2.y as i128 - p3.y as i128)
+        + p2.x as i128 * (p3.y as i128 - p1.y as i128)
+        + p3.x as i128 * (p1.y as i128 - p2.y as i128);
 
     match determinant.cmp(&0) {
         Ordering::Greater => TurnType::Left,

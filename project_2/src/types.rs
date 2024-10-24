@@ -1,3 +1,5 @@
+use std::fmt::Arguments;
+
 // data types for input generation
 #[derive(Debug, PartialEq, Copy, Clone, Ord, Eq, PartialOrd)]
 pub struct Point {
@@ -35,4 +37,24 @@ pub enum Side {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Errors {
     LowerHullError,
+}
+
+// result collection
+pub type InputFunction = fn(i64) -> PointVector;
+pub type ConvexHullAlgorithm = fn(PointVector, Option<bool>, Option<usize>) -> PointVector;
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Plot {
+    pub title: String,
+    pub experiments: Vec<Experiment>,
+    pub input_sizes: Vec<i64>,
+    pub algorithm: ConvexHullAlgorithm,
+    pub args: (Option<bool>, Option<usize>),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Experiment {
+    pub name: String,
+    pub run_times: Vec<f64>,
+    pub upper_hull_lengths: Vec<usize>,
 }
