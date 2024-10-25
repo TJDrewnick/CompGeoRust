@@ -17,7 +17,7 @@ mod utils;
 fn main() {
     let input_sizes: Vec<i64> = (4..=8).map(|exp| 10i64.pow(exp)).collect();
 
-    //different_inputs_runtime(input_sizes.clone());
+    different_inputs_runtime(input_sizes.clone());
     //upper_hull_size(input_sizes.clone());
     parallel_runtime(input_sizes);
 
@@ -33,6 +33,8 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         (InverseCurve::get_input, "Upwards Curve".to_string()),
         (Line::get_input, "Line".to_string()),
     ];
+    
+    let y_range = 5e-7..7e-5;
 
     let grahams_all_inputs = Plot {
         title: "Grahams Scan on different Inputs".to_string(),
@@ -41,7 +43,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan,
         args: (Option::from(true), None),
-        y_range: 5e-7..5e-2,
+        y_range: y_range.clone(),
     };
 
     let gift_wrapping_all_inputs = Plot {
@@ -51,7 +53,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: gift_wrapping_upper_hull,
         args: (None, None),
-        y_range: 5e-7..5e-2,
+        y_range: 5e-7..1e-2,
     };
 
     let grahams_parallel_all_inputs = Plot {
@@ -61,7 +63,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel,
         args: (Option::from(true), Option::from(8)),
-        y_range: 5e-7..5e-2,
+        y_range: y_range.clone(),
     };
 
     let mut input_plots = vec![
@@ -81,11 +83,9 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
 
             for input_size in &input_sizes {
                 // skip gift wrapping for large sizes on Curve Inputs and
-                // slightly larger sizes on Uniform Square and Uniform Circle Inputs
+                // slightly larger sizes on Uniform Circle Inputs
                 if input_plot.algorithm as usize == gift_wrapping_upper_hull as usize
                     && ((function as usize == Curve::get_input as usize && input_size > &100000)
-                        || (function as usize == UniformSquare::get_input as usize
-                            && input_size > &1000000)
                         || (function as usize == UniformCircle::get_input as usize
                             && input_size > &10000000))
                 {
@@ -134,7 +134,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 5e-7..5e-2,
+        y_range: 2e-5..7e-5,
     };
     let uniform_circle_plot = Plot {
         title: "Performance on Uniformly Distributed Points in a Circle".to_string(),
@@ -156,7 +156,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 5e-7..5e-2,
+        y_range: 2.5e-5..1e-3,
     };
     let curve_plot = Plot {
         title: "Performance on Points on a Downwards Curve".to_string(),
@@ -178,7 +178,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 5e-7..5e-2,
+        y_range: 5e-6..1e-2,
     };
     let upwards_curve_plot = Plot {
         title: "Performance on Points on an Upwards Curve".to_string(),
@@ -200,7 +200,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 5e-7..5e-2,
+        y_range: 5e-7..3.5e-5,
     };
     let line_plot = Plot {
         title: "Performance on Points on a Line".to_string(),
@@ -222,7 +222,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 5e-7..5e-2,
+        y_range: 5e-7..3.5e-5,
     };
 
     // input_plots are grouped by solver
@@ -250,7 +250,7 @@ fn parallel_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel,
         args: (Option::from(false), Option::from(1)),
-        y_range: 5e-7..4e-5,
+        y_range: 5e-7..3.5e-5,
     };
 
     for thread in threads {
