@@ -33,7 +33,7 @@ pub fn gift_wrapping_upper_hull(
     loop {
         // if last upper hull point == rightmost point, we are done
         let last_uh_point = upper_hull.points[upper_hull.points.len() - 1];
-        if last_uh_point == rightmost {
+        if last_uh_point.x == rightmost.x {
             break;
         }
         let mut p = input.points[0];
