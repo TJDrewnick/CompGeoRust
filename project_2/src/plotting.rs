@@ -17,14 +17,14 @@ pub fn plot(plot: Plot) {
         .caption(plot.title, ("sans-serif", 26).into_font())
         .x_label_area_size(30)
         .y_label_area_size(55)
-        .build_cartesian_2d((x_first..x_last).log_scale(), plot.y_range.log_scale())
+        .build_cartesian_2d((x_first..x_last).log_scale(), plot.y_range)
         .unwrap();
 
     chart
         .configure_mesh()
         .max_light_lines(0)
         .y_label_formatter(&|y| format!("{:.1e}", y))
-        .y_desc("Average Runtime (logarithmic scale)")
+        .y_desc("Average Runtime in milliseconds / input size")
         .x_label_formatter(&|x| format!("{:.0e}", x))
         .x_desc("Input Size (logarithmic scale)")
         .draw()
@@ -117,12 +117,16 @@ pub fn plot_upper_hull_points(plot: Plot) {
 }
 
 pub fn plot_upper_hull(points: PointVector) {
-    let root = BitMapBackend::new("project_2/plots/upper_hull_us_gs.png", (480, 480)).into_drawing_area();
+    let root =
+        BitMapBackend::new("project_2/plots/upper_hull_us_gs.png", (480, 480)).into_drawing_area();
     let _ = root.fill(&WHITE);
     let root = root.margin(10, 10, 10, 10);
 
     let mut chart = ChartBuilder::on(&root)
-        .caption("Uniform Square - Grahams Scan", ("sans-serif", 26).into_font())
+        .caption(
+            "Uniform Square - Grahams Scan",
+            ("sans-serif", 26).into_font(),
+        )
         .x_label_area_size(35)
         .y_label_area_size(35)
         .build_cartesian_2d(-25i64..525i64, -25i64..525i64)

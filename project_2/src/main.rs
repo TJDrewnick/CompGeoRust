@@ -15,12 +15,12 @@ mod types;
 mod utils;
 
 fn main() {
-    let input_sizes: Vec<i64> = (2..=8).map(|exp| 10i64.pow(exp)).collect();
+    let input_sizes: Vec<i64> = (4..=8).map(|exp| 10i64.pow(exp)).collect();
 
     //different_inputs_runtime(input_sizes.clone());
-    upper_hull_size(input_sizes.clone());
-    //parallel_runtime(input_sizes);
-    
+    //upper_hull_size(input_sizes.clone());
+    parallel_runtime(input_sizes);
+
     //upper_hull()
 }
 
@@ -107,7 +107,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
                 let avg_runtime = total_runtime / 5.0;
                 println!("{}: {}", input_size, avg_runtime);
 
-                experiment.run_times.push(avg_runtime);
+                experiment.run_times.push(avg_runtime * 1000.0 / *input_size as f64);
             }
 
             input_plot.experiments.push(experiment);
@@ -250,7 +250,7 @@ fn parallel_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel,
         args: (Option::from(false), Option::from(1)),
-        y_range: 5e-7..5e-2,
+        y_range: 5e-7..4e-5,
     };
 
     for thread in threads {
@@ -286,7 +286,7 @@ fn parallel_runtime(input_sizes: Vec<i64>) {
             let avg_runtime = total_runtime / 5.0;
             println!("{}: {}", input_size, avg_runtime);
 
-            experiment.run_times.push(avg_runtime);
+            experiment.run_times.push(avg_runtime * 1000.0 / *input_size as f64);
         }
         grahams_parallel_different_threads
             .experiments
