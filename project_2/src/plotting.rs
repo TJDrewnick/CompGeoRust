@@ -1,4 +1,5 @@
-use crate::types::Plot;
+use crate::types::{Plot, Point, PointVector};
+use plotters::coord::types::{RangedCoordi32, RangedCoordi64};
 use plotters::prelude::*;
 use plotters::style::full_palette::ORANGE;
 
@@ -73,14 +74,13 @@ pub fn plot_upper_hull_points(plot: Plot) {
         .caption(plot.title, ("sans-serif", 26).into_font())
         .x_label_area_size(30)
         .y_label_area_size(55)
-        .build_cartesian_2d((x_first..x_last).log_scale(), plot.y_range)
+        .build_cartesian_2d((x_first..x_last).log_scale(), plot.y_range.log_scale())
         .unwrap();
 
     chart
         .configure_mesh()
         .max_light_lines(0)
-        .y_label_formatter(&|y| format!("{:.1e}", y))
-        .y_desc("Points on Upper Hull")
+        .y_desc("Points on Upper Hull (logarithmic scale)")
         .x_label_formatter(&|x| format!("{:.0e}", x))
         .x_desc("Input Size (logarithmic scale)")
         .draw()
@@ -111,6 +111,35 @@ pub fn plot_upper_hull_points(plot: Plot) {
         .border_style(BLACK)
         .background_style(WHITE.mix(0.75))
         .draw()
+        .unwrap();
+
+    root.present().unwrap();
+}
+
+pub fn plot_upper_hull(points: PointVector) {
+    let root = BitMapBackend::new("project_2/plots/upper_hull_us_gs.png", (480, 480)).into_drawing_area();
+    let _ = root.fill(&WHITE);
+    let root = root.margin(10, 10, 10, 10);
+
+    let mut chart = ChartBuilder::on(&root)
+        .caption("Uniform Square - Grahams Scan", ("sans-serif", 26).into_font())
+        .x_label_area_size(35)
+        .y_label_area_size(35)
+        .build_cartesian_2d(-25i64..525i64, -25i64..525i64)
+        .unwrap();
+
+    chart
+        .configure_mesh()
+        .y_desc("Y")
+        .x_desc("X")
+        .draw()
+        .unwrap();
+
+    chart
+        .draw_series(
+            LineSeries::new(points.points.iter().map(|Point { x, y }| (*x, *y)), &BLACK)
+                .point_size(2),
+        )
         .unwrap();
 
     root.present().unwrap();

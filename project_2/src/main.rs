@@ -2,8 +2,8 @@ use crate::gift_wrapping::gift_wrapping_upper_hull;
 use crate::grahams_scan::grahams_scan;
 use crate::grahams_scan_parallel::grahams_scan_parallel;
 use crate::input_generation::{Curve, InverseCurve, Line, UniformCircle, UniformSquare};
-use crate::plotting::{plot, plot_upper_hull_points};
-use crate::types::{Experiment, InputFunction, Plot, Point};
+use crate::plotting::{plot, plot_upper_hull, plot_upper_hull_points};
+use crate::types::{ConvexHullAlgorithm, Experiment, InputFunction, Plot, Point};
 use std::time::Instant;
 
 mod gift_wrapping;
@@ -15,13 +15,17 @@ mod types;
 mod utils;
 
 fn main() {
-    //let args: Vec<String> = std::env::args().collect();
+    let input_sizes: Vec<i64> = (2..=8).map(|exp| 10i64.pow(exp)).collect();
 
-    // get running times for all wanted plots
+    //different_inputs_runtime(input_sizes.clone());
+    upper_hull_size(input_sizes.clone());
+    //parallel_runtime(input_sizes);
+    
+    //upper_hull()
+}
 
+fn different_inputs_runtime(input_sizes: Vec<i64>) {
     // grahams scan, gift wrapping, parallel grahams scan (8 cores) on all inputs
-    // annotate with number of points on upper hull
-    let input_sizes: Vec<i64> = (2..=5).map(|exp| 10i64.pow(exp)).collect();
     let input_types: Vec<(InputFunction, String)> = vec![
         (UniformSquare::get_input, "Uniform Square".to_string()),
         (UniformCircle::get_input, "Uniform Circle".to_string()),
@@ -232,56 +236,9 @@ fn main() {
     plot(curve_plot);
     plot(upwards_curve_plot);
     plot(line_plot);
+}
 
-    // upper hull points given the input size
-    let mut upper_hull_points = Plot {
-        title: "Points on the Upper Hull".to_string(),
-        path: "project_2/plots/upper_hull_points.png".to_string(),
-        experiments: vec![],
-        input_sizes: input_sizes.clone(),
-        algorithm: gift_wrapping_upper_hull,
-        args: (Option::from(true), None),
-        y_range: 0f64..100f64,
-    };
-
-    let upper_hull_inputs: Vec<(InputFunction, String)> = vec![
-        (UniformSquare::get_input, "Uniform Square".to_string()),
-        (UniformCircle::get_input, "Uniform Circle".to_string()),
-    ];
-
-    for (function, name) in upper_hull_inputs {
-        println!("{}, {}", name, upper_hull_points.title);
-
-        let mut experiment = Experiment {
-            name: name.clone(),
-            run_times: vec![],
-        };
-
-        for input_size in &input_sizes {
-            let upper_hull_algorithm = upper_hull_points.algorithm;
-
-            // calculate the runtime 4 additional times to get the more consistent average
-            let total_points: usize = (0..5)
-                .map(|_| {
-                    let input = function(*input_size);
-                    upper_hull_algorithm(input, upper_hull_points.args.0, upper_hull_points.args.1)
-                        .points
-                        .len()
-                })
-                .sum();
-
-            let avg_points = total_points / 5;
-            println!("{}: {}", input_size, avg_points);
-
-            experiment.run_times.push(avg_points as f64);
-        }
-
-        upper_hull_points.experiments.push(experiment);
-    }
-
-    // plot upper hull points by input size
-    plot_upper_hull_points(upper_hull_points);
-
+fn parallel_runtime(input_sizes: Vec<i64>) {
     // grahams scan vs parallel grahams scan on one input with different cores
     let threads = vec![1, 2, 4, 8, 16];
     let input_function = UniformSquare::get_input;
@@ -338,4 +295,77 @@ fn main() {
 
     // plot parallel comparison
     plot(grahams_parallel_different_threads);
+}
+
+fn upper_hull_size(input_sizes: Vec<i64>) {
+    // upper hull points given the input size
+    let mut upper_hull_points = Plot {
+        title: "Points on the Upper Hull".to_string(),
+        path: "project_2/plots/upper_hull_points.png".to_string(),
+        experiments: vec![],
+        input_sizes: input_sizes.clone(),
+        algorithm: grahams_scan,
+        args: (Option::from(true), None),
+        y_range: 3f64..4000f64,
+    };
+
+    let runs: Vec<(InputFunction, ConvexHullAlgorithm, String)> = vec![
+        (
+            UniformSquare::get_input,
+            gift_wrapping_upper_hull,
+            "Uniform Square, Gift Wrapping".to_string(),
+        ),
+        (
+            UniformCircle::get_input,
+            gift_wrapping_upper_hull,
+            "Uniform Circle, Gift Wrapping".to_string(),
+        ),
+        (
+            UniformSquare::get_input,
+            grahams_scan,
+            "Uniform Square, Grahams Scan".to_string(),
+        ),
+        (
+            UniformCircle::get_input,
+            grahams_scan,
+            "Uniform Circle, Grahams Scan".to_string(),
+        ),
+    ];
+
+    for (input_function, algorithm, name) in runs {
+        println!("{}, {}", name, upper_hull_points.title);
+
+        let mut experiment = Experiment {
+            name: name.clone(),
+            run_times: vec![],
+        };
+
+        for input_size in &input_sizes {
+            // calculate the runtime 4 additional times to get the more consistent average
+            let total_points: usize = (0..5)
+                .map(|_| {
+                    let input = input_function(*input_size);
+                    algorithm(input, upper_hull_points.args.0, upper_hull_points.args.1)
+                        .points
+                        .len()
+                })
+                .sum();
+
+            let avg_points = total_points / 5;
+            println!("{}: {}", input_size, avg_points);
+
+            experiment.run_times.push(avg_points as f64);
+        }
+
+        upper_hull_points.experiments.push(experiment);
+    }
+
+    // plot upper hull points by input size
+    plot_upper_hull_points(upper_hull_points);
+}
+
+fn upper_hull() {
+    let input = UniformSquare::get_input(10000);
+    let result = grahams_scan(input, Option::from(true), None);
+    plot_upper_hull(result);
 }
