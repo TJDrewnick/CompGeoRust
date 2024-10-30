@@ -15,9 +15,9 @@ mod types;
 mod utils;
 
 fn main() {
-    let input_sizes: Vec<i64> = (4..=8).map(|exp| 10i64.pow(exp)).collect();
+    let input_sizes: Vec<i64> = (5..=8).map(|exp| 10i64.pow(exp)).collect();
 
-    different_inputs_runtime(input_sizes.clone());
+    //different_inputs_runtime(input_sizes.clone());
     //upper_hull_size(input_sizes.clone());
     parallel_runtime(input_sizes);
 
@@ -250,7 +250,7 @@ fn parallel_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel,
         args: (Option::from(false), Option::from(1)),
-        y_range: 5e-7..3.5e-5,
+        y_range: 5e-7..2e-5,
     };
 
     for thread in threads {
