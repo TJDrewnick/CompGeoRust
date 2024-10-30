@@ -2,7 +2,7 @@ use crate::gift_wrapping::gift_wrapping_upper_hull;
 use crate::grahams_scan::grahams_scan;
 use crate::grahams_scan_parallel::grahams_scan_parallel;
 use crate::input_generation::{Curve, InverseCurve, Line, UniformCircle, UniformSquare};
-use crate::plotting::{plot, plot_upper_hull, plot_upper_hull_points};
+use crate::plotting::{plot, plot_log, plot_upper_hull, plot_upper_hull_points};
 use crate::types::{ConvexHullAlgorithm, Experiment, InputFunction, Plot, Point};
 use std::time::Instant;
 
@@ -17,7 +17,7 @@ mod utils;
 fn main() {
     let input_sizes: Vec<i64> = (5..=8).map(|exp| 10i64.pow(exp)).collect();
 
-    //different_inputs_runtime(input_sizes.clone());
+    different_inputs_runtime(input_sizes.clone());
     //upper_hull_size(input_sizes.clone());
     parallel_runtime(input_sizes);
 
@@ -34,7 +34,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         (Line::get_input, "Line".to_string()),
     ];
     
-    let y_range = 5e-7..7e-5;
+    let y_range = 5e-7..4e-5;
 
     let grahams_all_inputs = Plot {
         title: "Grahams Scan on different Inputs".to_string(),
@@ -53,7 +53,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: gift_wrapping_upper_hull,
         args: (None, None),
-        y_range: 5e-7..1e-2,
+        y_range: 1e-6..1e-1,
     };
 
     let grahams_parallel_all_inputs = Plot {
@@ -134,7 +134,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 2e-5..7e-5,
+        y_range: 1e-6..1e-1,
     };
     let uniform_circle_plot = Plot {
         title: "Performance on Uniformly Distributed Points in a Circle".to_string(),
@@ -156,7 +156,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 2.5e-5..1e-3,
+        y_range: 1e-6..1e-1,
     };
     let curve_plot = Plot {
         title: "Performance on Points on a Downwards Curve".to_string(),
@@ -178,7 +178,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 5e-6..1e-2,
+        y_range: 1e-6..1e-1,
     };
     let upwards_curve_plot = Plot {
         title: "Performance on Points on an Upwards Curve".to_string(),
@@ -200,7 +200,7 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 5e-7..3.5e-5,
+        y_range: 5e-7..2e-5,
     };
     let line_plot = Plot {
         title: "Performance on Points on a Line".to_string(),
@@ -222,18 +222,22 @@ fn different_inputs_runtime(input_sizes: Vec<i64>) {
         input_sizes: input_sizes.clone(),
         algorithm: grahams_scan_parallel, // not needed
         args: (None, None),
-        y_range: 5e-7..3.5e-5,
+        y_range: 5e-7..2e-5,
     };
 
     // input_plots are grouped by solver
-    for solver_plot in input_plots.iter() {
-        plot(solver_plot.clone());
-    }
-
+    //for solver_plot in input_plots.iter() {
+    //    plot(solver_plot.clone());
+    //}
+    plot(input_plots[0].clone());
+    plot_log(input_plots[1].clone());
+    plot(input_plots[2].clone());
+    
+    
     // plot grouped by input generation
-    plot(uniform_square_plot);
-    plot(uniform_circle_plot);
-    plot(curve_plot);
+    plot_log(uniform_square_plot);
+    plot_log(uniform_circle_plot);
+    plot_log(curve_plot);
     plot(upwards_curve_plot);
     plot(line_plot);
 }
